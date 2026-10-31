@@ -1,0 +1,116 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+  background: var(--background);
+}
+
+.wordmark {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  color: var(--text-primary);
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin: 4px 0 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form input {
+  font: inherit;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text-primary);
+}
+.form input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.form button {
+  margin-top: 6px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.form button:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+.form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  color: var(--accent-warm);
+  font-size: 13px;
+  margin: 0;
+}
+
+.success {
+  color: var(--verified);
+  font-size: 13px;
+  margin: 0;
+}
+
+.footerLink {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+.footerLink a {
+  color: var(--accent-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.footerLink a:hover {
+  text-decoration: underline;
+}

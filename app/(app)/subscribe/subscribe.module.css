@@ -1,0 +1,215 @@
+.main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.main h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.statusCard {
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.statusCard.active {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+.statusCard.inactive {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.statusLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.statusValue.active {
+  color: var(--success);
+  font-weight: 800;
+  font-size: 17px;
+}
+.statusValue.inactive {
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 17px;
+}
+.statusNote {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.secondaryBtn {
+  display: inline-block;
+  margin-top: 14px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+.secondaryBtn:hover {
+  background: var(--accent-primary-hover);
+}
+
+.benefitList {
+  margin: 4px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.benefitItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.benefitCheck {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.benefitCheck svg {
+  width: 11px;
+  height: 11px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+}
+
+.planToggle {
+  display: flex;
+  gap: 10px;
+}
+.planOption {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  position: relative;
+  background: var(--surface);
+}
+.planOption.selected {
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 6%, var(--surface));
+}
+.planBadge {
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  background: var(--accent-warm);
+  color: white;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.planName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.planOption.selected .planName {
+  color: var(--accent-primary);
+}
+.planPrice {
+  font-size: 19px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+.planPrice span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.payOptions {
+  display: flex;
+  gap: 10px;
+}
+.payOption {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface);
+}
+.payOption.selected {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 6%, var(--surface));
+}
+
+.spacer {
+  height: 24px;
+}
+
+.cta {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s ease;
+}
+.cta:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+.cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.fine {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+.error {
+  font-size: 12.5px;
+  color: var(--danger);
+  margin: 0 0 10px;
+}

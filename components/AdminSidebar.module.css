@@ -1,0 +1,62 @@
+.sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+}
+.wordmark {
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  padding: 0 10px 24px;
+  color: var(--text-primary);
+}
+.wordmark span {
+  color: var(--accent-primary);
+}
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: 2px;
+  text-decoration: none;
+}
+.linkLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.link svg {
+  width: 17px;
+  height: 17px;
+}
+.link:hover {
+  background: var(--surface-hover);
+}
+.link.active {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.badge {
+  background: var(--accent-warm);
+  color: white;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
+.badge.zero {
+  background: var(--border);
+  color: var(--text-secondary);
+}

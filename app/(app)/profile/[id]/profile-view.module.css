@@ -1,0 +1,619 @@
+.main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+}
+
+.backRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+.backRow svg {
+  width: 16px;
+  height: 16px;
+}
+.backRow:hover {
+  color: var(--text-primary);
+}
+
+.gallery {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3.6;
+  background: var(--surface);
+}
+.gallerySlide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  font-weight: 800;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.gallerySlide.active {
+  opacity: 1;
+}
+.gallerySlide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.galleryDots {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.galleryDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background 0.15s ease, width 0.15s ease;
+  border: none;
+  padding: 0;
+}
+.galleryDot.active {
+  background: white;
+  width: 18px;
+  border-radius: 3px;
+}
+.galleryNew {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: var(--accent-warm);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.galleryNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+}
+.galleryNav svg {
+  width: 16px;
+  height: 16px;
+}
+.galleryNav.prev {
+  left: 12px;
+}
+.galleryNav.next {
+  right: 12px;
+}
+
+.identityRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+.identityLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.identityLeft h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+}
+.verifiedBadge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--verified);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.verifiedBadge svg {
+  width: 11px;
+  height: 11px;
+}
+
+.iconActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.iconCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid;
+  cursor: pointer;
+  background: var(--background);
+  position: relative;
+}
+.iconCircle svg {
+  width: 18px;
+  height: 18px;
+}
+.iconCircle.like {
+  border-color: var(--accent-warm);
+  color: var(--accent-warm);
+}
+.iconCircle.like:hover {
+  background: color-mix(in srgb, var(--accent-warm) 10%, var(--background));
+}
+.iconCircle.like[data-active='true'] {
+  background: var(--accent-warm);
+  color: white;
+}
+.iconCircle.more {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.iconCircle.more:hover {
+  background: var(--surface-hover);
+}
+
+.overflowMenu {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(23, 23, 28, 0.12);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 5;
+}
+.overflowItem {
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.overflowItem svg {
+  width: 14px;
+  height: 14px;
+}
+.overflowItem:hover {
+  background: var(--surface-hover);
+}
+.overflowItem.danger {
+  color: var(--accent-warm);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 6px;
+}
+.metaRow svg {
+  width: 14px;
+  height: 14px;
+}
+
+.photosStrip {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.photoThumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+}
+.photoThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photoThumb.active {
+  border-color: var(--accent-primary);
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.pill svg {
+  width: 12px;
+  height: 12px;
+}
+.pill.neutral {
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 28px 0 8px;
+}
+.bioText {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin-top: 10px;
+}
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+.detailItem svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.detailLabel {
+  color: var(--text-secondary);
+}
+
+.contactCard {
+  margin-top: 28px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px;
+}
+.contactBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.contactBtn:hover {
+  background: var(--accent-primary-hover);
+}
+.contactBtn svg {
+  width: 17px;
+  height: 17px;
+}
+.contactNote {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.reportRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 22px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.reportRow svg {
+  width: 13px;
+  height: 13px;
+}
+.reportRow:hover {
+  color: var(--accent-warm);
+}
+
+@media (max-width: 560px) {
+  .main {
+    padding: 14px 16px 60px;
+  }
+  .identityLeft h1 {
+    font-size: 20px;
+  }
+  .gallery {
+    aspect-ratio: 4 / 4.2;
+  }
+}
+
+/* Paywall modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 20, 0.55);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+.modalOverlay.open {
+  display: flex;
+}
+.modalCard {
+  background: var(--background);
+  width: 100%;
+  max-width: 420px;
+  border-radius: 22px 22px 0 0;
+  padding: 22px 22px 26px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+}
+@media (min-width: 640px) {
+  .modalOverlay {
+    align-items: center;
+  }
+  .modalCard {
+    border-radius: 20px;
+  }
+}
+
+.modalTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modalTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+.modalClose {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.modalClose svg {
+  width: 15px;
+  height: 15px;
+}
+.modalSub {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.benefitList {
+  margin: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.benefitItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.benefitCheck {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.benefitCheck svg {
+  width: 11px;
+  height: 11px;
+}
+
+.planToggle {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.planOption {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  position: relative;
+  background: var(--background);
+}
+.planOption.selected {
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 6%, var(--background));
+}
+.planBadge {
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  background: var(--accent-warm);
+  color: white;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.planName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.planOption.selected .planName {
+  color: var(--accent-primary);
+}
+.planPrice {
+  font-size: 19px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+.planPrice span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.payLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 20px 0 8px;
+}
+.payOptions {
+  display: flex;
+  gap: 10px;
+}
+.payOption {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--background);
+}
+.payOption.selected {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 6%, var(--background));
+}
+
+.modalCta {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 22px;
+  transition: background 0.15s ease;
+}
+.modalCta:hover {
+  background: var(--accent-primary-hover);
+}
+.modalCta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.modalFine {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.reportModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+}
+.reportModalCard {
+  background: var(--background);
+  width: 100%;
+  max-width: 360px;
+  border-radius: 18px;
+  padding: 22px;
+}
+.reportOption {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  margin-top: 8px;
+  cursor: pointer;
+  font-size: 13.5px;
+}
+.reportOption:hover {
+  border-color: var(--accent-primary);
+}

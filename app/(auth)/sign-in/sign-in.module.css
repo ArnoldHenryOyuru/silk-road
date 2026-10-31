@@ -1,0 +1,208 @@
+.main {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 48px 24px 60px;
+}
+
+.main h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 26px;
+  line-height: 1.5;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.main input[type='email'],
+.main input[type='password'],
+.main input[type='text'] {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.main input:focus {
+  border-color: var(--accent-primary);
+}
+.main input.inputError {
+  border-color: var(--danger);
+}
+
+.toggleVisibility {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.toggleVisibility svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 5px;
+}
+
+.forgotRow {
+  text-align: right;
+  margin: -6px 0 18px;
+}
+.forgotRow a {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primaryBtn {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.primaryBtn:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switchRow {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin-top: 22px;
+}
+.switchRow a {
+  color: var(--accent-primary);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: 20px;
+  width: fit-content;
+}
+.backLink svg {
+  width: 15px;
+  height: 15px;
+}
+.backLink:hover {
+  color: var(--text-primary);
+}
+
+.statusBanner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 13px 14px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.statusBanner svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.statusBanner.warn {
+  background: color-mix(in srgb, var(--accent-warm) 12%, transparent);
+  color: var(--accent-warm);
+}
+.statusBanner.info {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary);
+}
+.statusBanner.danger {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+.statusBanner .bannerText {
+  color: var(--text-primary);
+}
+.statusBanner a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.successWrap {
+  text-align: center;
+  padding: 10px 0;
+}
+.successBadge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.successBadge svg {
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 32px 20px 50px;
+  }
+}

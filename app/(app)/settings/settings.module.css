@@ -1,0 +1,129 @@
+/* Map these variables to your app theme. Fallbacks use the Silk Road spec tokens (white base, violet accent). */
+.page {
+  --fg: var(--text-primary, #17171c);
+  --muted: var(--text-secondary, #6b6b76);
+  --line: var(--border, #e7e7ec);
+  --surface: var(--surface-bg, #fafafa);
+  --accent: var(--accent-primary, #6c4ff6);
+  --accent-fg: #ffffff;
+  --danger: #b3261e;
+
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+  color: var(--fg);
+  background: var(--background, #ffffff);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem;
+}
+
+.section {
+  border-top: 1px solid var(--line);
+  padding: 1.25rem 0;
+}
+
+.heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+
+.body {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0 0 0.9rem;
+  max-width: 62ch;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+}
+.facts dt {
+  color: var(--muted);
+}
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The one distinct element: the delete section carries the warning colour. */
+.danger {
+  border-top: 2px solid var(--danger);
+}
+.danger .heading {
+  color: var(--danger);
+}
+
+.details {
+  margin-top: 0.25rem;
+}
+
+.summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0.4rem 0;
+}
+.summary:focus-visible,
+.button:focus-visible,
+.dangerButton:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.form {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.input {
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.button,
+.dangerButton {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  border: 0;
+  cursor: pointer;
+  justify-self: start;
+}
+.button {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.dangerButton {
+  background: var(--danger);
+  color: #ffffff;
+}
+.button:disabled,
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--danger);
+  margin: 0;
+  font-weight: 500;
+}

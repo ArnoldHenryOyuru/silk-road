@@ -1,0 +1,425 @@
+.main {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 32px 24px 70px;
+}
+
+.progressTrack {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 26px;
+}
+.progressSeg {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 0.25s ease;
+}
+.progressSeg.done {
+  background: var(--accent-primary);
+}
+
+.stepLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  margin-bottom: 6px;
+}
+.main h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+.subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.row {
+  display: flex;
+  gap: 12px;
+}
+.row > div {
+  flex: 1;
+}
+
+.main input[type='text'],
+.main input[type='date'],
+.main textarea,
+.main select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  padding: 12px 14px;
+  font-size: 15px;
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.main input[type='text'],
+.main input[type='date'],
+.main select {
+  height: 48px;
+}
+.main textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.5;
+}
+.main input:focus,
+.main textarea:focus,
+.main select:focus {
+  border-color: var(--accent-primary);
+}
+.main select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B6B76' stroke-width='2.2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.charCount {
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chipOption {
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: var(--background);
+  transition: all 0.15s ease;
+}
+.chipOption.selected {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, var(--background));
+}
+
+.interestInputRow {
+  display: flex;
+  gap: 8px;
+}
+.interestInputRow input {
+  flex: 1;
+}
+.addInterestBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.interestChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.interestChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.interestChip button {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  padding: 3px;
+}
+.interestChip button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.photoSlot {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  border: 1.5px dashed var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.photoSlot:hover {
+  border-color: var(--accent-primary);
+}
+.photoSlot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.plusIcon {
+  width: 22px;
+  height: 22px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.removeBtn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(17, 17, 20, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+}
+.removeBtn svg {
+  width: 11px;
+  height: 11px;
+}
+.primaryTag {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.photoHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.selfieRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.selfieSlot {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.selfieSlot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.selfieSlot svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+}
+.selfieTextTitle {
+  font-size: 13px;
+  font-weight: 700;
+}
+.selfieTextSub {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.primaryBtn {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.primaryBtn:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+.primaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+.backLink svg {
+  width: 15px;
+  height: 15px;
+}
+.backLink:hover {
+  color: var(--text-primary);
+}
+
+.reviewCard {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--surface);
+  margin-bottom: 10px;
+}
+.reviewRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--border);
+}
+.reviewRow:last-child {
+  border-bottom: none;
+}
+.reviewRow .label {
+  color: var(--text-secondary);
+}
+.reviewRow .value {
+  font-weight: 700;
+  text-align: right;
+  max-width: 60%;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 5px;
+}
+
+.successWrap {
+  text-align: center;
+  padding: 10px 0;
+}
+.successBadge {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.successBadge svg {
+  width: 28px;
+  height: 28px;
+}
+.pendingList {
+  text-align: left;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pendingItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.pendingDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent-warm) 15%, transparent);
+  color: var(--accent-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pendingDot svg {
+  width: 10px;
+  height: 10px;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+.hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 24px 18px 60px;
+  }
+}

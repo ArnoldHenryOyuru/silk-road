@@ -1,0 +1,328 @@
+.discoverMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+}
+
+.discoverHero {
+  position: relative;
+  padding: 56px 0 28px;
+}
+
+.ghostText {
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  font-size: 110px;
+  font-weight: 800;
+  color: var(--text-primary);
+  opacity: 0.045;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.discoverHeroRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.discoverHero h1 {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0;
+  position: relative;
+}
+
+.discoverHero p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.filterBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+
+/* 4 columns x 5 rows = one page of 20. Phones drop to 2 columns (2 x 10). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 12px;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    gap: 12px;
+  }
+  .ghostText {
+    font-size: 70px;
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .discoverMain {
+    padding: 0 16px 60px;
+  }
+  .discoverHero {
+    padding: 32px 0 20px;
+  }
+  .discoverHero h1 {
+    font-size: 26px;
+  }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(23, 23, 28, 0.08);
+}
+
+.cardPhoto {
+  position: relative;
+  aspect-ratio: 3 / 3.1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: white;
+}
+
+.tagNew {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--accent-warm);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.cardBody {
+  padding: 9px 10px 11px;
+}
+
+.cardTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cardNameRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 12.5px;
+  min-width: 0;
+}
+.cardNameRow .nameText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cardNameRow .dot {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.verifiedBadge {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--verified);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.verifiedBadge svg {
+  width: 8px;
+  height: 8px;
+}
+
+.iconActions {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.iconCircle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid;
+  cursor: pointer;
+  background: var(--background);
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0;
+}
+.iconCircle svg {
+  width: 11px;
+  height: 11px;
+}
+.iconCircle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.iconCircle.like {
+  border-color: var(--accent-warm);
+  color: var(--accent-warm);
+}
+.iconCircle.like:hover {
+  background: color-mix(in srgb, var(--accent-warm) 10%, var(--background));
+}
+.iconCircle.like[data-active='true'] {
+  background: var(--accent-warm);
+  color: white;
+}
+
+.iconCircle.contact {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+.iconCircle.contact:hover {
+  background: color-mix(in srgb, var(--accent-primary) 10%, var(--background));
+}
+
+.iconCircle.locked {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 5px;
+}
+.cardMeta svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.cardTagRow {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 2px;
+}
+.cardTagRow svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+/* "2 of 5 contacts left today" */
+.discoverHero p.allowance {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-top: 6px;
+}
+.discoverHero p.allowance[data-empty='true'] {
+  color: var(--accent-warm);
+}
+
+/* Page links */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 28px;
+}
+.pageLink {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pageLink:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+.pageLink[aria-current='page'] {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+.pageLink[aria-disabled='true'] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.pageGap {
+  color: var(--text-secondary);
+  padding: 0 2px;
+}
+
+/* Short message at the bottom of the screen */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--text-primary);
+  color: var(--background);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  box-shadow: var(--shadow);
+  z-index: 50;
+}

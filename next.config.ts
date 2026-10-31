@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  experimental: {
+    serverActions: {
+      // Default is 1MB — too small for multiple profile photos + a selfie
+      // in one submission (profile creation and Edit Profile both upload
+      // several files via a single Server Action call).
+      bodySizeLimit: '15mb',
+    },
+  },
+}
 
-export default nextConfig;
+export default nextConfig
