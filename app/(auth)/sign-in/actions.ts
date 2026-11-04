@@ -1,12 +1,16 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { safeNext } from '@/lib/members-only'
 
 type SignInResult = { error: string } | { success: true; redirectTo: string }
 
 export async function signIn(formData: FormData): Promise<SignInResult> {
   const email = String(formData.get('email') || '').trim()
   const password = String(formData.get('password') || '')
+  // Where the visitor was headed before sign-in. Only members-only pages are
+  // accepted, so this can't be used to send anyone to another website.
+  const next = safeNext(formData.get('next'), '')
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -41,6 +45,6 @@ export async function signIn(formData: FormData): Promise<SignInResult> {
       return { success: true, redirectTo: '/reactivate' }
 
     default:
-      return { success: true, redirectTo: '/discover' }
+      return { success: true, redirectTo: next || '/discover' }
   }
 }

@@ -55,7 +55,10 @@ export default function SignInPage() {
     setBanner(null)
     setPending(true)
 
-    const result = await signIn(new FormData(e.currentTarget))
+    const formData = new FormData(e.currentTarget)
+    // Carry over ?next= (checked again on the server before it is used).
+    formData.set('next', new URLSearchParams(window.location.search).get('next') ?? '')
+    const result = await signIn(formData)
 
     setPending(false)
 

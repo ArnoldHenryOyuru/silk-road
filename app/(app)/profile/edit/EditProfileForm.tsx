@@ -27,6 +27,8 @@ export interface EditProfileInitialData {
   bio: string
   interests: string[]
   photos: ExistingPhoto[]
+  isDiscoverable: boolean
+  teaserOptIn: boolean
 }
 
 type Slot =
@@ -71,6 +73,8 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
   const [bio, setBio] = useState(initial.bio)
   const [interests, setInterests] = useState<string[]>(initial.interests)
   const [interestInput, setInterestInput] = useState('')
+  const [isDiscoverable, setIsDiscoverable] = useState(initial.isDiscoverable)
+  const [teaserOptIn, setTeaserOptIn] = useState(initial.isDiscoverable && initial.teaserOptIn)
 
   const initialSlots: Slot[] = initial.photos
     .slice()
@@ -168,6 +172,8 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
     formData.set('lookingFor', lookingFor ?? '')
     formData.set('showMe', showMe ?? '')
     formData.set('bio', bio)
+    formData.set('visibility', isDiscoverable ? 'discoverable' : 'discreet')
+    formData.set('teaserOptIn', isDiscoverable && teaserOptIn ? '1' : '0')
     interests.forEach((tag) => formData.append('interests', tag))
     removedIds.forEach((id) => formData.append('removedPhotoIds', id))
 
@@ -394,6 +400,56 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
           ))}
         </div>
       </div>
+
+      <div className={styles.sectionLabel}>Privacy</div>
+      <div className={styles.visibilityGroup} role="radiogroup" aria-label="Profile visibility">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={isDiscoverable}
+          className={`${styles.visibilityOption} ${isDiscoverable ? styles.selected : ''}`}
+          onClick={() => {
+            setIsDiscoverable(true)
+            markDirty()
+          }}
+        >
+          <div className={styles.visibilityTitle}>Listed on Discover</div>
+          <div className={styles.visibilitySub}>Other members can find your profile in the Discover feed.</div>
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={!isDiscoverable}
+          className={`${styles.visibilityOption} ${!isDiscoverable ? styles.selected : ''}`}
+          onClick={() => {
+            setIsDiscoverable(false)
+            setTeaserOptIn(false)
+            markDirty()
+          }}
+        >
+          <div className={styles.visibilityTitle}>Discreet</div>
+          <div className={styles.visibilitySub}>
+            You won't appear on Discover or the public homepage. You can still browse everyone else's profile.
+          </div>
+        </button>
+      </div>
+      {isDiscoverable && (
+        <label className={styles.teaserCheck}>
+          <input
+            type="checkbox"
+            checked={teaserOptIn}
+            onChange={(e) => {
+              setTeaserOptIn(e.target.checked)
+              markDirty()
+            }}
+          />
+          <span>
+            Show my main photo, first name, age and campus on Silk Road's public homepage. Anyone can see it, even
+            without an account.
+          </span>
+        </label>
+      )}
+      <p className={styles.visibilityHint}>Switching to Discreet takes effect as soon as you save.</p>
 
       {error && <p className={styles.fieldError}>{error}</p>}
 

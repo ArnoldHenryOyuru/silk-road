@@ -60,6 +60,7 @@ export default async function DiscoverPage({
     .from('profiles')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'approved')
+    .eq('is_discoverable', true)
     .neq('user_id', user.id)
   if (excludeBlocked) countQuery = countQuery.not('user_id', 'in', excludeBlocked)
   const { count: total } = await countQuery
@@ -80,6 +81,7 @@ export default async function DiscoverPage({
     `
     )
     .eq('status', 'approved')
+    .eq('is_discoverable', true)
     .neq('user_id', user.id)
   if (excludeBlocked) profilesQuery = profilesQuery.not('user_id', 'in', excludeBlocked)
 

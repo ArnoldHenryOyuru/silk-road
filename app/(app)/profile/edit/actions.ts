@@ -38,6 +38,18 @@ export async function updateProfile(formData: FormData) {
   const bio = String(formData.get('bio') || '').trim()
   const interests = formData.getAll('interests').map(String).filter(Boolean)
 
+  // Visibility is only changed when the form sends it, so an old cached page
+  // can't flip it by accident. Discreet always clears the homepage opt-in too
+  // (the database enforces the same rule).
+  const visibilityRaw = formData.get('visibility')
+  const visibilityFields =
+    visibilityRaw === 'discoverable' || visibilityRaw === 'discreet'
+      ? {
+          is_discoverable: visibilityRaw === 'discoverable',
+          teaser_opt_in: visibilityRaw === 'discoverable' && formData.get('teaserOptIn') === '1',
+        }
+      : {}
+
   if (!displayName || !campus || !dob) {
     return { error: 'Name, date of birth, and campus are required.' }
   }
@@ -63,6 +75,7 @@ export async function updateProfile(formData: FormData) {
       show_me: showMe || null,
       bio: bio || null,
       interests,
+      ...visibilityFields,
     })
     .eq('id', existing.id)
 

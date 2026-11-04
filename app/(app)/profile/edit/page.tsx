@@ -22,6 +22,7 @@ export default async function EditProfilePage() {
     .select(
       `
       id, display_name, age, campus, bio, looking_for, show_me, interests,
+      is_discoverable, teaser_opt_in,
       profile_photos ( id, image_url, status, is_primary )
     `
     )
@@ -57,6 +58,8 @@ export default async function EditProfilePage() {
     showMe: profile.show_me,
     bio: profile.bio ?? '',
     interests: profile.interests ?? [],
+    isDiscoverable: profile.is_discoverable !== false,
+    teaserOptIn: !!profile.teaser_opt_in,
     photos: photos.filter((p) => p.url),
   }
 

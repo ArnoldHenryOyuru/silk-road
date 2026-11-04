@@ -11,7 +11,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/sign-in')
+    // Signed-out visitors see the "what to expect" home page. middleware.ts adds
+    // ?next= for the main members-only pages; this is the safety net for the rest.
+    redirect('/')
   }
 
   const { data: subscription } = await supabase

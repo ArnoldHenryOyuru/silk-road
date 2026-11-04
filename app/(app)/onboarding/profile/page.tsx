@@ -83,6 +83,10 @@ export default function CreateProfilePage() {
   const [submitting, setSubmitting] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
 
+  // Step 4: who can find me
+  const [visibility, setVisibility] = useState<'discoverable' | 'discreet'>('discoverable')
+  const [teaserOptIn, setTeaserOptIn] = useState(false)
+
   function goStep(n: Step) {
     setStep(n)
   }
@@ -198,6 +202,8 @@ export default function CreateProfilePage() {
         if (photo) formData.append('photos', photo)
       })
       if (selfie) formData.set('selfie', selfie)
+      formData.set('visibility', visibility)
+      formData.set('teaserOptIn', visibility === 'discoverable' && teaserOptIn ? '1' : '0')
 
       const result = await createProfile(formData)
       if (result?.error) {
@@ -456,7 +462,50 @@ export default function CreateProfilePage() {
               <span className={styles.label}>Photos</span>
               <span className={styles.value}>{photoCount} added</span>
             </div>
+            <div className={styles.reviewRow}>
+              <span className={styles.label}>Visibility</span>
+              <span className={styles.value}>{visibility === 'discreet' ? 'Discreet' : 'Listed on Discover'}</span>
+            </div>
           </div>
+
+          <div className={styles.visibilityHeading}>Who can find you?</div>
+          <div className={styles.visibilityGroup} role="radiogroup" aria-label="Profile visibility">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={visibility === 'discoverable'}
+              className={`${styles.visibilityOption} ${visibility === 'discoverable' ? styles.selected : ''}`}
+              onClick={() => setVisibility('discoverable')}
+            >
+              <div className={styles.visibilityTitle}>Listed on Discover</div>
+              <div className={styles.visibilitySub}>Other members can find your profile in the Discover feed.</div>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={visibility === 'discreet'}
+              className={`${styles.visibilityOption} ${visibility === 'discreet' ? styles.selected : ''}`}
+              onClick={() => {
+                setVisibility('discreet')
+                setTeaserOptIn(false)
+              }}
+            >
+              <div className={styles.visibilityTitle}>Discreet</div>
+              <div className={styles.visibilitySub}>
+                You won't appear on Discover. You can still browse everyone else's profile.
+              </div>
+            </button>
+          </div>
+          {visibility === 'discoverable' && (
+            <label className={styles.teaserCheck}>
+              <input type="checkbox" checked={teaserOptIn} onChange={(e) => setTeaserOptIn(e.target.checked)} />
+              <span>
+                Optional: also show my main photo, first name, age and campus on Silk Road's public homepage. Anyone
+                can see it, even without an account.
+              </span>
+            </label>
+          )}
+          <p className={styles.visibilityHint}>You can change this any time in Edit Profile.</p>
 
           {submitError && <p className={styles.fieldError}>{submitError}</p>}
 
@@ -485,7 +534,9 @@ export default function CreateProfilePage() {
               <span className={styles.pendingDot}>
                 <DotIcon />
               </span>
-              You won't appear on Discover until then
+              {visibility === 'discreet'
+                ? 'Your profile stays hidden from Discover, as you chose'
+                : "You won't appear on Discover until then"}
             </div>
             <div className={styles.pendingItem}>
               <span className={styles.pendingDot}>

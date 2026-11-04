@@ -46,6 +46,10 @@ export async function createProfile(formData: FormData) {
   const showMe = String(formData.get('showMe') || '').trim()
   const bio = String(formData.get('bio') || '').trim()
   const interests = formData.getAll('interests').map(String).filter(Boolean)
+  // Visibility: "discreet" members are never listed on Discover or the public
+  // homepage. The homepage opt-in only counts when the member is listed.
+  const isDiscoverable = String(formData.get('visibility') || 'discoverable') !== 'discreet'
+  const teaserOptIn = isDiscoverable && formData.get('teaserOptIn') === '1'
   const photos = formData.getAll('photos').filter((p): p is File => p instanceof File && p.size > 0)
   const selfieEntry = formData.get('selfie')
   const selfie = selfieEntry instanceof File && selfieEntry.size > 0 ? selfieEntry : null
@@ -104,6 +108,11 @@ export async function createProfile(formData: FormData) {
       return { error: 'Your profile has already been created.' }
     }
     profileId = existing.id
+    // Finishing an earlier attempt: apply the visibility choice made this time.
+    await supabase
+      .from('profiles')
+      .update({ is_discoverable: isDiscoverable, teaser_opt_in: teaserOptIn })
+      .eq('id', existing.id)
   } else {
     // `status` is deliberately NOT sent: the column defaults to 'pending_review'
     // (not visible on Discover until approved, §2.1, §2.2), and users must not
@@ -119,6 +128,8 @@ export async function createProfile(formData: FormData) {
         looking_for: lookingFor || null,
         show_me: showMe || null,
         interests,
+        is_discoverable: isDiscoverable,
+        teaser_opt_in: teaserOptIn,
       })
       .select('id')
       .single()
