@@ -22,6 +22,14 @@ export async function toggleLike(profileId: string) {
   if (existing) {
     await supabase.from('likes').delete().eq('id', existing.id)
   } else {
+    // Discreet members can't be opened, so they can't be liked either.
+    const { data: target } = await supabase
+      .from('profiles')
+      .select('user_id, is_discoverable')
+      .eq('id', profileId)
+      .maybeSingle()
+    if (!target || (target.is_discoverable === false && target.user_id !== user.id)) return
+
     await supabase.from('likes').insert({ liker_id: user.id, liked_profile_id: profileId })
   }
 

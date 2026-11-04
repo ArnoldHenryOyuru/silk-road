@@ -32,7 +32,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       .from('profiles')
       .select(
         `
-        id, user_id, status, display_name, age, campus, bio, looking_for, interests,
+        id, user_id, status, is_discoverable, display_name, age, campus, bio, looking_for, interests,
         face_match_verified, created_at,
         profile_photos ( image_url, status, is_primary )
       `
@@ -56,9 +56,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   if (!profile) notFound()
 
-  // Not found, or pending review and not your own — same 404 either way,
-  // so a stranger can't tell "doesn't exist" apart from "not approved yet".
-  if (profile.status !== 'approved' && profile.user_id !== user.id) {
+  // Not found, pending review, or a discreet member, and not your own: the same
+  // 404 every time, so a stranger can't tell "doesn't exist" apart from
+  // "not approved yet" or "chose to be discreet". Members always see their own.
+  if (profile.user_id !== user.id && (profile.status !== 'approved' || profile.is_discoverable === false)) {
     notFound()
   }
 

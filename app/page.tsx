@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getTeaser, TEASER_MIN } from '@/lib/teaser'
 import { safeNext } from '@/lib/members-only'
+import { PLANS, CURRENCY, formatUgx } from '@/lib/payments/plans'
 import styles from './home.module.css'
 
 export const metadata = {
@@ -10,12 +11,14 @@ export const metadata = {
   description: 'Browse reviewed profiles from Makerere, MUBS, Kyambogo and more, and say hello on WhatsApp.',
 }
 
-// TODO: read these from lib/payments/plans.ts so the homepage can't drift from
-// the real prices. Hard-coded for now (weekly raised to UGX 10,000 on 2026-10-21).
-const PLAN_CARDS = [
-  { name: 'Weekly', price: 'UGX 10,000', perDay: 2, period: '7 days' },
-  { name: 'Monthly', price: 'UGX 25,000', perDay: 5, period: '30 days' },
-]
+// Read from lib/payments/plans.ts, the single source of truth, so the homepage
+// can never show a different price or daily limit from the real checkout.
+const PLAN_CARDS = Object.values(PLANS).map((plan) => ({
+  name: plan.label,
+  price: `${CURRENCY} ${formatUgx(plan.amount)}`,
+  perDay: plan.dailyContacts,
+  period: `${plan.days} days`,
+}))
 
 const STEPS = [
   {

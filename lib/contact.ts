@@ -102,13 +102,15 @@ export async function unlockContact(viewerId: string, profileId: string): Promis
     if (mine?.status !== 'approved') return { ok: false, reason: 'profile_not_approved' }
   }
 
-  // 4. The target: an approved profile, not the viewer's own.
+  // 4. The target: an approved, listed (not discreet) profile, not the viewer's own.
   const { data: target } = await admin
     .from('profiles')
-    .select('display_name, user_id, status')
+    .select('display_name, user_id, status, is_discoverable')
     .eq('id', profileId)
     .maybeSingle()
-  if (!target || target.status !== 'approved' || target.user_id === viewerId) return NOT_FOUND
+  // Discreet members can't be contacted: the same vague answer as for anyone else.
+  if (!target || target.status !== 'approved' || target.is_discoverable === false || target.user_id === viewerId)
+    return NOT_FOUND
 
   // 5. The target's account must be active and have a number.
   const { data: targetUser } = await admin
