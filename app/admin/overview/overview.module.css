@@ -1,0 +1,38 @@
+.wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; color: #17171C; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.title { font-size: 22px; font-weight: 600; margin: 0; }
+.range { display: flex; gap: 4px; background: #FAFAFA; border: 1px solid #E7E7EC; border-radius: 10px; padding: 3px; }
+.rangeLink { font-size: 13px; padding: 6px 12px; border-radius: 8px; color: #6B6B76; text-decoration: none; border: 1px solid transparent; }
+.rangeLink.on { background: #fff; color: #17171C; border-color: #E7E7EC; }
+.sectionLabel { font-size: 12px; color: #6B6B76; margin: 24px 0 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.card { background: #FAFAFA; border: 1px solid #E7E7EC; border-radius: 12px; padding: 14px 16px; color: inherit; text-decoration: none; display: block; }
+.cardLink:hover { border-color: #6C4FF6; }
+.label { font-size: 12px; color: #6B6B76; margin: 0 0 4px; }
+.value { font-size: 24px; font-weight: 600; margin: 0; line-height: 1.2; }
+.note { font-size: 12px; color: #6B6B76; margin: 6px 0 0; }
+.up { color: #1F8A5B; }
+.down { color: #D14B3A; }
+.late { color: #FF6B57; }
+.err { font-size: 11px; color: #D14B3A; margin: 6px 0 0; word-break: break-word; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 24px; }
+.panel { background: #fff; border: 1px solid #E7E7EC; border-radius: 12px; padding: 16px; }
+.panelTitle { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.panelSub { font-size: 12px; color: #6B6B76; margin: 0 0 14px; }
+.bars { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
+.barCol { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.barStack { width: 100%; display: flex; flex-direction: column; min-height: 2px; border-radius: 3px 3px 0 0; overflow: hidden; }
+.barRest { background: #D9D9E3; }
+.barOk { background: #6C4FF6; }
+.barLabels { display: flex; gap: 4px; margin-top: 6px; font-size: 10px; color: #6B6B76; }
+.barLabels span { flex: 1; text-align: center; white-space: nowrap; overflow: visible; }
+.legend { display: flex; gap: 14px; font-size: 11px; color: #6B6B76; margin-top: 10px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #E7E7EC; font-size: 13px; color: inherit; text-decoration: none; }
+.row:first-of-type { border-top: none; }
+.row:hover .rowTitle { color: #6C4FF6; }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 8px; background: #F0EDFF; color: #4B33C9; white-space: nowrap; }
+.pillReport { background: #FFEDEA; color: #B33A28; }
+.rowTitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.age { font-size: 12px; color: #6B6B76; }
+.empty { font-size: 13px; color: #6B6B76; margin: 0; }
