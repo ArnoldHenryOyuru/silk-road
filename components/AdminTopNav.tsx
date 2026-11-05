@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOutAdmin } from '@/app/admin/actions'
+import EnablePush from '@/components/EnablePush'
 import styles from '@/app/admin/(protected)/admin.module.css'
 
 const TABS = [
@@ -32,9 +33,12 @@ export default function AdminTopNav({ counts }: { counts: Record<string, number>
             )
           })}
         </div>
-        <form action={signOutAdmin}>
-          <button type="submit" className={styles.logout}>Log out</button>
-        </form>
+        <div className={styles.navActions}>
+          <EnablePush />
+          <form action={signOutAdmin}>
+            <button type="submit" className={styles.logout}>Log out</button>
+          </form>
+        </div>
       </div>
     </nav>
   )
