@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/service'
 import RangeSelect from '@/components/RangeSelect'
-import { PLANS, isPlanId } from '@/lib/plans'
+import { PLANS, isPlanId } from '@/lib/payments/plans'
 import styles from './admin.module.css'
 
 type Service = ReturnType<typeof createServiceClient>

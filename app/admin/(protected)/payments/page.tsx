@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/service'
-import { PLANS, isPlanId, formatUgx } from '@/lib/plans'
+import { PLANS, isPlanId, formatUgx } from '@/lib/payments/plans'
 import styles from '../admin.module.css'
 
 const PAGE_SIZE = 25
