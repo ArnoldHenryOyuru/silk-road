@@ -10,12 +10,6 @@ export default function TermsPage() {
       <h1>Terms of Service</h1>
       <p className={styles.updated}>Last updated: [date]</p>
 
-      <div className={styles.disclaimer}>
-        This is a starting draft, not reviewed by a lawyer. Before Silk Road is used by real members, have
-        this reviewed by someone familiar with Ugandan law — this document alone is not a substitute for
-        legal advice.
-      </div>
-
       <h2>1. Who can use Silk Road</h2>
       <p>
         You must be at least 18 years old to create an account. By signing up, you confirm that you meet this

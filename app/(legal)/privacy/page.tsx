@@ -10,12 +10,6 @@ export default function PrivacyPage() {
       <h1>Privacy Policy</h1>
       <p className={styles.updated}>Last updated: [date]</p>
 
-      <div className={styles.disclaimer}>
-        This is a starting draft, not reviewed by a lawyer. Before Silk Road handles real members' data, have
-        this reviewed against Uganda's Data Protection and Privacy Act, 2019 — this document alone is not a
-        substitute for legal advice.
-      </div>
-
       <h2>1. What we collect</h2>
       <p>When you use Silk Road, we collect:</p>
       <ul>
