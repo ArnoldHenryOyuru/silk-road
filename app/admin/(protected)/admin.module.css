@@ -1,6 +1,6 @@
 .main {
   padding: 28px 36px 60px;
-  max-width: 900px;
+  max-width: 1100px;
 }
 
 .pageTitle {
@@ -214,3 +214,235 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.sectionLabel {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 22px 0 12px;
+}
+
+.statHint {
+  font-size: 12.5px;
+  margin-top: 6px;
+  color: var(--text-secondary);
+}
+.hintWarn { color: var(--accent-warm); }
+.hintBad { color: var(--danger); }
+.hintGood { color: var(--success); }
+
+.rangeSelect {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0 16px;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px 22px;
+}
+.panelTitle { font-size: 16px; font-weight: 700; margin: 0; }
+.panelSub { font-size: 13px; color: var(--text-secondary); margin: 2px 0 0; }
+
+/* Chart */
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  margin-top: 18px;
+}
+.barCol {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.bar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+  min-height: 2px;
+}
+.barApproved { background: #6ba6ee; }
+.barRejected { background: #ee7b7b; min-height: 3px; margin-top: 2px; }
+.barLabel { font-size: 11.5px; color: var(--text-secondary); }
+
+/* Review next */
+.reviewRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.reviewRow:last-child, .activityRow:last-child { border-bottom: none; }
+.reviewTitle { flex: 1; font-size: 13.5px; min-width: 0; }
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.tagReport  { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+.tagProfile { background: color-mix(in srgb, var(--accent-warm) 20%, transparent); color: var(--accent-warm); }
+.tagPhoto   { background: color-mix(in srgb, #4a8cf0 20%, transparent); color: #6ba6ee; }
+.tagBio     { background: color-mix(in srgb, var(--text-secondary) 20%, transparent); color: var(--text-primary); }
+
+/* Recent activity */
+.activityRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.activityMsg { flex: 1; font-size: 14px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; border: 1.5px solid var(--text-secondary); flex-shrink: 0; }
+.dot_approved { border-color: var(--success); }
+.dot_payment  { border-color: #6ba6ee; }
+.dot_rejected { border-color: var(--danger); }
+
+/* Top tab nav */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 16px 36px 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.tab:hover { color: var(--text-primary); }
+.tabActive { color: var(--text-primary); font-weight: 700; border-bottom-color: var(--text-primary); }
+.tabBadge {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--accent-warm);
+  color: #1a1206;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+@media (max-width: 800px) {
+  .main { padding: 20px 16px 48px; }
+  .twoCol { grid-template-columns: 1fr; }
+  .tabs { padding: 12px 16px 0; }
+}
+
+/* ===== Members & Payments ===== */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.searchForm { display: flex; gap: 8px; flex: 1; min-width: 220px; }
+.searchInput {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pillActive {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.tableWrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow-x: auto;
+}
+.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table tr:last-child td { border-bottom: none; }
+.cellMuted { color: var(--text-secondary); }
+.cellName { font-weight: 700; }
+
+.badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-secondary) 20%, transparent);
+  color: var(--text-primary);
+}
+.badgeGood { background: color-mix(in srgb, var(--success) 18%, transparent); color: var(--success); }
+.badgeWarn { background: color-mix(in srgb, var(--accent-warm) 18%, transparent); color: var(--accent-warm); }
+.badgeBad  { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.pagerBtns { display: flex; gap: 8px; }
+.tableNote { font-size: 12px; color: var(--text-secondary); margin: 10px 2px 0; }

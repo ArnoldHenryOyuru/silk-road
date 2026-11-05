@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
-import AdminSidebar from '@/components/AdminSidebar'
+import AdminTopNav from '@/components/AdminTopNav'
 
 export default async function AdminProtectedLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -35,9 +35,9 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <AdminSidebar counts={counts} />
-      <main style={{ flex: 1 }}>{children}</main>
+    <div style={{ minHeight: '100vh' }}>
+      <AdminTopNav counts={counts} />
+      <main>{children}</main>
     </div>
   )
 }
