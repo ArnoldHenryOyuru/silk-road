@@ -54,6 +54,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip static files and /api (payment webhooks etc. don't need a session here).
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|xml|woff2?)$).*)'],
+  // Skip static files, the link-preview image, and /api (payment webhooks etc. don't need a session here).
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|opengraph-image|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|xml|woff2?)$).*)'],
 }
