@@ -24,7 +24,7 @@ export default function Image() {
           Silk Road
         </div>
         <div style={{ display: "flex", fontSize: 44, color: "#6B6B76", marginTop: 24 }}>
-          Meet people on campus
+          Meet someone new today
         </div>
       </div>
     ),
