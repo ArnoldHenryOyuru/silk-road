@@ -1,10 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
 
-export const metadata = {
+export const metadata: Metadata = {
+  // Change this to https://silkroadug.com once you buy the domain
+  metadataBase: new URL('https://silkroadug.vercel.app'),
   title: 'Silk Road',
   description: 'A campus-focused connections platform.',
+  openGraph: {
+    title: 'Silk Road',
+    description: 'A campus-focused connections platform.',
+    url: '/',
+    siteName: 'Silk Road',
+    type: 'website',
+    locale: 'en_UG',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Silk Road',
+    description: 'A campus-focused connections platform.',
+  },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -22,26 +37,3 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   )
 }
-
-// Merge this into your EXISTING app/layout.tsx (replace any current `metadata` export).
-// This is not a new file to add on its own.
-
-export const metadata: Metadata = {
-  // Change this to https://silkroadug.com once you buy the domain
-  metadataBase: new URL("https://silkroadug.vercel.app"),
-  title: "Silk Road",
-  description: "Discover and connect with people on campus.",
-  openGraph: {
-    title: "Silk Road",
-    description: "Discover and connect with people on campus.",
-    url: "/",
-    siteName: "Silk Road",
-    type: "website",
-    locale: "en_UG",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Silk Road",
-    description: "Discover and connect with people on campus.",
-  },
-};
