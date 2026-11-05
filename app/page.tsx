@@ -116,7 +116,7 @@ export default async function HomePage({
         <h2 className={styles.sectionTitle}>{showTeaser ? 'A look inside' : 'Members near you'}</h2>
         {showTeaser ? (
           <>
-            <p className={styles.sectionSub}>A few members who chose to be shown here.</p>
+            <p className={styles.sectionSub}>Featured profiles you can meet today.</p>
             <div className={styles.teaserGrid}>
               {teaser.map((card, i) => (
                 <div className={styles.teaserCard} key={`${card.firstName}-${i}`}>
