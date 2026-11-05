@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { signOutAdmin } from '@/app/admin/actions'
 import styles from '@/app/admin/(protected)/admin.module.css'
 
 const TABS = [
@@ -18,16 +19,23 @@ export default function AdminTopNav({ counts }: { counts: Record<string, number>
   const pathname = usePathname()
   return (
     <nav className={styles.tabs}>
-      {TABS.map((t) => {
-        const active = t.href === '/admin' ? pathname === '/admin' : pathname.startsWith(t.href)
-        const n = 'key' in t ? counts[t.key] : 0
-        return (
-          <Link key={t.href} href={t.href} className={`${styles.tab} ${active ? styles.tabActive : ''}`}>
-            {t.label}
-            {n > 0 && <span className={styles.tabBadge}>{n}</span>}
-          </Link>
-        )
-      })}
+      <div className={styles.tabsInner}>
+        <div className={styles.tabsList}>
+          {TABS.map((t) => {
+            const active = t.href === '/admin' ? pathname === '/admin' : pathname.startsWith(t.href)
+            const n = 'key' in t ? counts[t.key] : 0
+            return (
+              <Link key={t.href} href={t.href} className={`${styles.tab} ${active ? styles.tabActive : ''}`}>
+                {t.label}
+                {n > 0 && <span className={styles.tabBadge}>{n}</span>}
+              </Link>
+            )
+          })}
+        </div>
+        <form action={signOutAdmin}>
+          <button type="submit" className={styles.logout}>Log out</button>
+        </form>
+      </div>
     </nav>
   )
 }
