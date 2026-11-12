@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { normalizeUgandaPhone } from '@/lib/phone'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const PHOTO_BUCKET = 'profile-photos'
 const MAX_PHOTOS = 6
@@ -29,6 +30,22 @@ function checkImage(file: File): string | null {
   if (!EXTENSIONS[file.type]) return 'Photos must be JPG, PNG or WebP images.'
   if (file.size > MAX_FILE_BYTES) return 'One of your photos is too large. Try a smaller one.'
   return null
+}
+
+// Moves a sign-up 'draft' profile into the review queue. Members can't write
+// `status` (sql/lock-down-columns.sql), so this runs with the admin client, and
+// only ever from 'draft' to 'pending_review'.
+async function submitDraftForReview(admin: ReturnType<typeof createAdminClient>, profileId: string) {
+  const { error } = await admin
+    .from('profiles')
+    .update({ status: 'pending_review' })
+    .eq('id', profileId)
+    .eq('status', 'draft')
+  if (error) {
+    console.error('draft submit failed', error.code)
+    return false
+  }
+  return true
 }
 
 export async function createProfile(formData: FormData) {
@@ -93,26 +110,62 @@ export async function createProfile(formData: FormData) {
     if (problem) return { error: problem }
   }
 
-  // If an earlier attempt saved the profile but no photos (for example the
-  // connection dropped mid-upload), finish that profile instead of failing on
-  // the duplicate. A profile that already has photos is never touched here.
-  const { data: existing } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle()
+  // The profile row may already exist: sign-up now creates a 'draft' one (name
+  // only), and an earlier attempt that dropped mid-upload leaves one behind with
+  // no photos. Either way this form finishes THAT row instead of failing on the
+  // duplicate. Reads and writes use the admin client because members can't touch
+  // `status`; every query is filtered to the signed-in user.
+  const admin = createAdminClient()
+  const { data: existing } = await admin.from('profiles').select('id, status').eq('user_id', user.id).maybeSingle()
 
   let profileId: string
+  let finishingDraft = false
   if (existing) {
     const { count } = await supabase
       .from('profile_photos')
       .select('id', { count: 'exact', head: true })
       .eq('profile_id', existing.id)
     if ((count ?? 0) > 0) {
+      // Photos were saved but the submit step didn't finish: just finish it.
+      if (existing.status === 'draft') {
+        if (!(await submitDraftForReview(admin, existing.id))) {
+          return { error: 'Could not submit your profile for review. Please try again.' }
+        }
+        return { success: true as const }
+      }
       return { error: 'Your profile has already been created.' }
     }
     profileId = existing.id
-    // Finishing an earlier attempt: apply the visibility choice made this time.
-    await supabase
-      .from('profiles')
-      .update({ is_discoverable: isDiscoverable, teaser_opt_in: teaserOptIn })
-      .eq('id', existing.id)
+    finishingDraft = existing.status === 'draft'
+
+    if (existing.status === 'draft' || existing.status === 'pending_review') {
+      // Nothing here has been reviewed yet, so save everything from this form.
+      const { error: updateError } = await admin
+        .from('profiles')
+        .update({
+          display_name: displayName,
+          age,
+          campus,
+          bio: bio || null,
+          looking_for: lookingFor || null,
+          show_me: showMe || null,
+          interests,
+          is_discoverable: isDiscoverable,
+          teaser_opt_in: teaserOptIn,
+        })
+        .eq('id', existing.id)
+      if (updateError) {
+        console.error('profile update failed', updateError.code)
+        return { error: 'Could not save your profile. Please try again.' }
+      }
+    } else {
+      // Already reviewed (approved, rejected...): only the visibility choice may
+      // change here. Bio and name changes go through Edit Profile and its review.
+      await admin
+        .from('profiles')
+        .update({ is_discoverable: isDiscoverable, teaser_opt_in: teaserOptIn })
+        .eq('id', existing.id)
+    }
   } else {
     // `status` is deliberately NOT sent: the column defaults to 'pending_review'
     // (not visible on Discover until approved, §2.1, §2.2), and users must not
@@ -146,6 +199,9 @@ export async function createProfile(formData: FormData) {
     .update({ phone_number: normalizedPhone })
     .eq('id', user.id)
   if (phoneError) {
+    if (phoneError.code === '23505') {
+      return { error: 'That WhatsApp number is already linked to another account.' }
+    }
     return { error: 'Could not save your phone number. Please try again.' }
   }
 
@@ -190,6 +246,14 @@ export async function createProfile(formData: FormData) {
       // Never surface this column in a query exposed to other users —
       // it's for face-match review only (§2.1), not for display.
       await supabase.from('profiles').update({ verification_selfie_path: selfiePath }).eq('id', profileId)
+    }
+  }
+
+  // Everything is saved: a draft now enters the review queue.
+  // (Batch 2 adds the "email must be verified" check right here.)
+  if (finishingDraft) {
+    if (!(await submitDraftForReview(admin, profileId))) {
+      return { error: 'Could not submit your profile for review. Please try again.' }
     }
   }
 
