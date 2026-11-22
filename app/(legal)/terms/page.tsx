@@ -19,7 +19,7 @@ export default function TermsPage() {
 
       <h2>2. Account approval and verification</h2>
       <p>
-        New profiles and photos go through a review process before they're visible to other members. We may
+        New profiles and photos go through a review process before they&apos;re visible to other members. We may
         ask for a verification selfie to confirm your photos are genuinely you. We can reject a profile or
         photo, or ask you to resubmit, at our discretion.
       </p>
@@ -34,9 +34,9 @@ export default function TermsPage() {
       <h2>4. Conduct</h2>
       <p>You agree not to:</p>
       <ul>
-        <li>Impersonate someone else, or use photos that aren't genuinely your own</li>
+        <li>Impersonate someone else, or use photos that aren&apos;t genuinely your own</li>
         <li>Harass, threaten, or abuse other members</li>
-        <li>Use Silk Road if you're under 18</li>
+        <li>Use Silk Road if you&apos;re under 18</li>
         <li>Attempt to circumvent our moderation, verification, or payment systems</li>
       </ul>
       <p>
@@ -58,8 +58,8 @@ export default function TermsPage() {
 
       <h2>7. No guarantee of outcomes</h2>
       <p>
-        Silk Road helps you discover and contact other members — it doesn't guarantee matches, dates, or any
-        particular outcome, and we aren't responsible for what happens in conversations or meetings that
+        Silk Road helps you discover and contact other members — it doesn&apos;t guarantee matches, dates, or any
+        particular outcome, and we aren&apos;t responsible for what happens in conversations or meetings that
         result from using the app.
       </p>
 

@@ -27,7 +27,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   // Round 1: the profile, your like and your subscription don't depend on
   // each other, so fetch them together.
-  const [{ data: profile }, { data: likeRow }, { data: subscription }] = await Promise.all([
+  const [{ data: profile }, { data: likeRow }, { data: subscription }, { data: myProfile }, { data: myAccount }] = await Promise.all([
     supabase
       .from('profiles')
       .select(
@@ -52,6 +52,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       .eq('status', 'active')
       .gte('end_date', new Date().toISOString())
       .maybeSingle(),
+    supabase.from('profiles').select('status').eq('user_id', user.id).maybeSingle(),
+    supabase.from('users').select('email_verified_at').eq('id', user.id).maybeSingle(),
   ])
 
   if (!profile) notFound()
@@ -64,10 +66,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   }
 
   // Primary photo first.
-  const approvedPhotos = (profile.profile_photos ?? [])
-    .filter((p: any) => p.status === 'approved')
-    .sort((a: any, b: any) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
-  const paths: string[] = approvedPhotos.map((p: any) => p.image_url)
+  type PhotoRow = { status: string; is_primary?: boolean | null; image_url: string }
+  const approvedPhotos = ((profile.profile_photos ?? []) as PhotoRow[])
+    .filter((p) => p.status === 'approved')
+    .sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
+  const paths: string[] = approvedPhotos.map((p) => p.image_url)
 
   // Round 2: the block check needs the profile owner's id, and signing needs
   // the photo paths. Both are ready now and independent of each other.
@@ -81,7 +84,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       .maybeSingle(),
     paths.length > 0
       ? supabase.storage.from('profile-photos').createSignedUrls(paths, 3600)
-      : Promise.resolve({ data: [] as any[], error: null }),
+      : Promise.resolve({
+          data: [] as Array<{ path: string | null; signedUrl: string | null; error?: string | null }>,
+          error: null,
+        }),
   ])
 
   // Don't let a blocked relationship (either direction) be viewable.
@@ -105,11 +111,18 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map((path) => signedByPath.get(path))
     .filter((url): url is string => !!url)
 
+  const rawStage = myProfile?.status as string | undefined
+  const viewerStage =
+    rawStage === 'approved' || rawStage === 'pending_review' || rawStage === 'rejected'
+      ? rawStage
+      : 'draft'
+  const emailVerified = Boolean(myAccount?.email_verified_at || user.email_confirmed_at || viewerStage === 'approved')
+
   const data: ProfileViewData = {
     id: profile.id,
     displayName: profile.display_name,
-    age: profile.age,
-    campus: profile.campus,
+    age: profile.age ?? null,
+    campus: profile.campus ?? null,
     bio: profile.bio,
     lookingFor: profile.looking_for,
     interests: profile.interests ?? [],
@@ -120,5 +133,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     liked: !!likeRow,
   }
 
-  return <ProfileView profile={data} isSubscribed={!!subscription} isOwner={profile.user_id === user.id} />
+  return (
+    <ProfileView
+      profile={data}
+      isSubscribed={!!subscription}
+      isOwner={profile.user_id === user.id}
+      viewerStage={viewerStage}
+      email={user.email ?? ''}
+      emailVerified={emailVerified}
+    />
+  )
 }

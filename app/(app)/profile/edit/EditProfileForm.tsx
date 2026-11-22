@@ -218,7 +218,7 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
 
       <h1>Edit Profile</h1>
       <p className={styles.subtitle}>
-        Changes to your photo or bio go through a quick review before they're visible on Discover. Everything else
+        Changes to your photo or bio go through a quick review before they&apos;re visible on Discover. Everything else
         updates right away.
       </p>
 
@@ -260,7 +260,7 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
       </div>
       {hasPendingPhoto && (
         <p className={styles.photoHint}>
-          A photo you changed recently is still being reviewed — it won't show on Discover until it's approved.
+          A photo you changed recently is still being reviewed — it won&apos;t show on Discover until it&apos;s approved.
         </p>
       )}
 
@@ -429,7 +429,7 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
         >
           <div className={styles.visibilityTitle}>Discreet</div>
           <div className={styles.visibilitySub}>
-            You won't appear on Discover or the public homepage. You can still browse everyone else's profile.
+            You won&apos;t appear on Discover or the public homepage. You can still browse everyone else&apos;s profile.
           </div>
         </button>
       </div>
@@ -444,7 +444,7 @@ export default function EditProfileForm({ initial }: { initial: EditProfileIniti
             }}
           />
           <span>
-            Show my main photo, first name, age and campus on Silk Road's public homepage. Anyone can see it, even
+            Show my main photo, first name, age and campus on Silk Road&apos;s public homepage. Anyone can see it, even
             without an account.
           </span>
         </label>

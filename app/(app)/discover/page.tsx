@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getContactAllowance } from '@/lib/contact'
@@ -109,7 +110,9 @@ export default async function DiscoverPage({
   // profile's approved photo path, then sign all of them in ONE request.
   const photoPathByProfile = new Map<string, string>()
   for (const p of visibleProfiles) {
-    const approved = (p.profile_photos ?? []).find((photo: any) => photo.status === 'approved')
+    const approved = (p.profile_photos ?? []).find(
+      (photo: { status: string; image_url: string }) => photo.status === 'approved'
+    )
     if (approved) photoPathByProfile.set(p.id, approved.image_url)
   }
 
@@ -163,11 +166,13 @@ export default async function DiscoverPage({
           <div>
             <h1>Discover</h1>
             <p>Verified students near you</p>
-            {isSubscribed && (
+            {isSubscribed && allowance.limit > 0 && (
               <p className={styles.allowance} data-empty={allowance.remaining === 0}>
                 {allowance.remaining > 0
-                  ? `${allowance.remaining} of ${allowance.limit} contacts left today`
-                  : `You've used all ${allowance.limit} contacts for today. They reset at midnight.`}
+                  ? allowance.isPendingCap
+                    ? `${allowance.remaining} of ${allowance.limit} pending contact left today (full plan unlocks after approval)`
+                    : `${allowance.remaining} of ${allowance.limit} contacts left today`
+                  : `You've used all ${allowance.limit} contact${allowance.limit === 1 ? '' : 's'} for today. They reset at midnight.`}
               </p>
             )}
           </div>
@@ -184,9 +189,57 @@ export default async function DiscoverPage({
         </div>
       </div>
 
+      {allowance.stage === 'draft' && (
+        <div className={styles.stageBanner}>
+          <div>
+            <div className={styles.stageBannerTitle}>Finish your profile to submit for review</div>
+            <div className={styles.stageBannerSub}>
+              You can browse Discover right now. Complete your checklist and verify your email to subscribe and contact members.
+            </div>
+          </div>
+          <Link href="/onboarding/profile" className={styles.stageBannerBtn}>
+            Complete checklist
+          </Link>
+        </div>
+      )}
+
+      {allowance.stage === 'pending_review' && (
+        <div className={`${styles.stageBanner} ${styles.stageBannerWarn}`}>
+          <div>
+            <div className={styles.stageBannerTitle}>Your profile is in review</div>
+            <div className={styles.stageBannerSub}>
+              {isSubscribed
+                ? 'Your profile is hidden from others until approved. You can still message 1 person a day right now.'
+                : 'Your profile is hidden until approved. You can subscribe now to unlock 1 contact a day while waiting.'}
+            </div>
+          </div>
+          <Link href="/pending-review" className={styles.stageBannerBtn}>
+            View status
+          </Link>
+        </div>
+      )}
+
+      {allowance.stage === 'rejected' && (
+        <div className={`${styles.stageBanner} ${styles.stageBannerDanger}`}>
+          <div>
+            <div className={styles.stageBannerTitle}>Updates needed on your profile</div>
+            <div className={styles.stageBannerSub}>
+              Contacts are paused until you update &amp; resubmit (or request a refund within 14 days).
+            </div>
+          </div>
+          <Link href="/pending-review" className={styles.stageBannerBtn}>
+            Fix or manage plan
+          </Link>
+        </div>
+      )}
+
       {feed.length > 0 ? (
         <>
-          <DiscoverGrid profiles={feed} isSubscribed={isSubscribed} contactLimit={allowance.limit} />
+          <DiscoverGrid
+            profiles={feed}
+            isSubscribed={isSubscribed && allowance.limit > 0}
+            contactLimit={allowance.limit}
+          />
           <DiscoverPagination page={page} totalPages={totalPages} />
         </>
       ) : (

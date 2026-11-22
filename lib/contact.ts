@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PLANS, isPlanId } from '@/lib/payments/plans'
+import type { MemberStage } from '@/lib/member-stage'
 
 /**
  * The ONE place a phone number is turned into a WhatsApp link. Every screen that
@@ -8,34 +9,31 @@ import { PLANS, isPlanId } from '@/lib/payments/plans'
  * below can't be skipped by calling a different copy of the logic.
  *
  * Daily limits come from the subscriber's plan (lib/payments/plans.ts:
- * dailyContacts) and count DIFFERENT people per day. The day resets at midnight
- * Kampala time (UTC+3, no daylight saving).
+ * dailyContacts) and count DIFFERENT people per day. Pending members are
+ * capped at 1 contact/day until approved; draft and rejected members cannot
+ * unlock contacts. The day resets at midnight Kampala time (UTC+3).
  */
 
-// "Verified" in the spec: the viewer's own profile must have passed review.
-// (Not face_match_verified: nothing reviews selfies yet, so requiring it would
-// lock everyone out. Switch to that when the selfie review screen exists.)
-const REQUIRE_APPROVED_PROFILE = true
-
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000
+const PENDING_DAILY_CAP = 1
 
 type Admin = ReturnType<typeof createAdminClient>
 
 export type ContactAllowance = {
   subscribed: boolean
-  limit: number // contacts per day on the viewer's plan (0 if not subscribed)
+  stage: MemberStage
+  isPendingCap: boolean
+  planLimit: number
+  limit: number // effective contacts per day (0 if not subscribed or draft/rejected)
   used: number // different people unlocked so far today
   remaining: number
 }
 
 export type ContactResult =
   | { ok: true; url: string; remaining: number; limit: number }
-  | { ok: false; reason: 'not_subscribed' | 'not_found' | 'profile_not_approved' }
+  | { ok: false; reason: 'not_subscribed' | 'not_found' | 'profile_not_approved' | 'profile_rejected' }
   | { ok: false; reason: 'rate_limited'; limit: number }
 
-// Every denial about the OTHER person (blocked, suspended, deactivated, not
-// approved, no number) returns the same vague answer, so a caller can't use the
-// response to learn who blocked them or who is suspended.
 const NOT_FOUND: ContactResult = { ok: false, reason: 'not_found' }
 
 function startOfTodayEat(now: Date): Date {
@@ -45,31 +43,50 @@ function startOfTodayEat(now: Date): Date {
 }
 
 async function loadAllowance(admin: Admin, viewerId: string, now: Date) {
-  const { data: subs } = await admin
-    .from('subscriptions')
-    .select('plan_type')
-    .eq('user_id', viewerId)
-    .eq('status', 'active')
-    .gte('end_date', now.toISOString())
+  const [{ data: subs }, { data: recent }, { data: mine }] = await Promise.all([
+    admin
+      .from('subscriptions')
+      .select('plan_type')
+      .eq('user_id', viewerId)
+      .eq('status', 'active')
+      .gte('end_date', now.toISOString()),
+    admin
+      .from('phone_unlock_events')
+      .select('profile_id')
+      .eq('viewer_id', viewerId)
+      .gte('created_at', startOfTodayEat(now).toISOString()),
+    admin.from('profiles').select('status').eq('user_id', viewerId).maybeSingle(),
+  ])
+
+  const rawStatus = mine?.status as string | undefined
+  const stage: MemberStage =
+    rawStatus === 'approved' || rawStatus === 'pending_review' || rawStatus === 'rejected'
+      ? rawStatus
+      : 'draft'
 
   const activeRows: { plan_type: string }[] = subs ?? []
   const limits = activeRows
     .map((row) => row.plan_type)
     .filter(isPlanId)
     .map((plan) => PLANS[plan].dailyContacts as number)
-  // If someone ever has two overlapping plans, the better one applies.
-  const limit = limits.length > 0 ? Math.max(...limits) : 0
+  const planLimit = limits.length > 0 ? Math.max(...limits) : 0
 
-  const { data: recent } = await admin
-    .from('phone_unlock_events')
-    .select('profile_id')
-    .eq('viewer_id', viewerId)
-    .gte('created_at', startOfTodayEat(now).toISOString())
+  let limit = 0
+  if (stage === 'approved') {
+    limit = planLimit
+  } else if (stage === 'pending_review') {
+    limit = Math.min(planLimit, PENDING_DAILY_CAP)
+  }
+
   const unlockedToday = new Set<string>((recent ?? []).map((row: { profile_id: string }) => row.profile_id))
-
   const used = unlockedToday.size
+  const isPendingCap = stage === 'pending_review' && planLimit > PENDING_DAILY_CAP
+
   const allowance: ContactAllowance = {
     subscribed: activeRows.length > 0,
+    stage,
+    isPendingCap,
+    planLimit,
     limit,
     used,
     remaining: Math.max(0, limit - used),
@@ -77,7 +94,7 @@ async function loadAllowance(admin: Admin, viewerId: string, now: Date) {
   return { allowance, unlockedToday }
 }
 
-/** For screens that show "2 of 5 contacts left today". Reads only the viewer's own data. */
+/** For screens that show remaining daily contacts. Reads only the viewer's own data. */
 export async function getContactAllowance(viewerId: string): Promise<ContactAllowance> {
   const { allowance } = await loadAllowance(createAdminClient(), viewerId, new Date())
   return allowance
@@ -87,32 +104,32 @@ export async function unlockContact(viewerId: string, profileId: string): Promis
   const admin = createAdminClient()
   const now = new Date()
 
-  // 1. The viewer's account must be active (deactivated, suspended, banned or
-  //    mid-deletion accounts have their contact ability frozen).
+  // 1. The viewer's account must be active.
   const { data: viewer } = await admin.from('users').select('status').eq('id', viewerId).maybeSingle()
   if (viewer?.status !== 'active') return NOT_FOUND
 
-  // 2. Subscribed, and what the plan allows per day.
+  // 2. Stage & subscription check.
   const { allowance, unlockedToday } = await loadAllowance(admin, viewerId, now)
-  if (!allowance.subscribed) return { ok: false, reason: 'not_subscribed' }
-
-  // 3. "Verified": the viewer's own profile has been approved.
-  if (REQUIRE_APPROVED_PROFILE) {
-    const { data: mine } = await admin.from('profiles').select('status').eq('user_id', viewerId).maybeSingle()
-    if (mine?.status !== 'approved') return { ok: false, reason: 'profile_not_approved' }
+  if (allowance.stage === 'draft') {
+    return { ok: false, reason: 'profile_not_approved' }
+  }
+  if (allowance.stage === 'rejected') {
+    return { ok: false, reason: 'profile_rejected' }
+  }
+  if (!allowance.subscribed) {
+    return { ok: false, reason: 'not_subscribed' }
   }
 
-  // 4. The target: an approved, listed (not discreet) profile, not the viewer's own.
+  // 3. The target: an approved, listed (not discreet) profile, not the viewer's own.
   const { data: target } = await admin
     .from('profiles')
     .select('display_name, user_id, status, is_discoverable')
     .eq('id', profileId)
     .maybeSingle()
-  // Discreet members can't be contacted: the same vague answer as for anyone else.
   if (!target || target.status !== 'approved' || target.is_discoverable === false || target.user_id === viewerId)
     return NOT_FOUND
 
-  // 5. The target's account must be active and have a number.
+  // 4. The target's account must be active and have a number.
   const { data: targetUser } = await admin
     .from('users')
     .select('status, phone_number')
@@ -120,7 +137,7 @@ export async function unlockContact(viewerId: string, profileId: string): Promis
     .maybeSingle()
   if (targetUser?.status !== 'active' || !targetUser.phone_number) return NOT_FOUND
 
-  // 6. No block in either direction.
+  // 5. No block in either direction.
   const { data: blocks } = await admin
     .from('blocks')
     .select('id')
@@ -131,21 +148,19 @@ export async function unlockContact(viewerId: string, profileId: string): Promis
     .limit(1)
   if (blocks && blocks.length > 0) return NOT_FOUND
 
-  // 7. Today's limit, on different people. Someone already unlocked today can be
-  //    reopened without using another contact.
+  // 6. Today's limit (1/day if pending_review, plan limit if approved).
   const alreadyUnlocked = unlockedToday.has(profileId)
   if (!alreadyUnlocked && allowance.remaining <= 0) {
     return { ok: false, reason: 'rate_limited', limit: allowance.limit }
   }
 
-  // 8. Log it BEFORE handing out the number (spec: highest-scrutiny event). If
-  //    the log can't be written, the number isn't released.
+  // 7. Log BEFORE releasing the number.
   const { error: logError } = await admin.from('phone_unlock_events').insert({
     viewer_id: viewerId,
     profile_id: profileId,
   })
   if (logError) {
-    console.error('phone_unlock_events insert failed') // never log the number itself
+    console.error('phone_unlock_events insert failed')
     return NOT_FOUND
   }
 

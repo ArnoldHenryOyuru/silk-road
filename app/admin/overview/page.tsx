@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/server";
 import {
   getOverview,
   serviceClient,
@@ -13,19 +12,7 @@ import { ADMIN_ROUTES } from "@/lib/admin/overview-config";
 import s from "./overview.module.css";
 
 async function requireAdmin() {
-  const store = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return store.getAll();
-        },
-        setAll() {},
-      },
-    },
-  );
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -185,6 +172,7 @@ export default async function AdminOverviewPage({
 
       <p className={s.sectionLabel}>Needs your attention</p>
       <div className={s.grid}>
+        <QueueCard label="Paid, awaiting review" stat={o.queues.paidAwaiting} href={ADMIN_ROUTES.profiles} now={o.now} />
         <QueueCard label="Pending profiles" stat={o.queues.profiles} href={ADMIN_ROUTES.profiles} now={o.now} />
         <QueueCard label="Pending photos" stat={o.queues.photos} href={ADMIN_ROUTES.photos} now={o.now} />
         <QueueCard label="Bio edits" stat={o.queues.bioEdits} href={ADMIN_ROUTES.bioEdits} now={o.now} />
@@ -239,6 +227,59 @@ export default async function AdminOverviewPage({
           <Card label="Signup to paid" error={conversion.error} />
         )}
       </div>
+
+      {signups.ok && (
+        <section className={s.panel} style={{ marginTop: 16 }}>
+          <p className={s.panelTitle}>Signup funnel</p>
+          <p className={s.panelSub}>Staged drop-off from brief sign-up to profile submission and approval</p>
+          <div className={s.funnelList}>
+            {[
+              {
+                label: "Signed up",
+                sub: `${signups.value.funnel.draft} still in draft`,
+                count: signups.value.funnel.signedUp,
+                pct: 100,
+                good: false,
+              },
+              {
+                label: "Profile submitted",
+                sub: `${signups.value.funnel.pendingReview} pending · ${signups.value.funnel.rejected} rejected`,
+                count: signups.value.funnel.submitted,
+                pct: signups.value.funnel.signedUp
+                  ? Math.round((signups.value.funnel.submitted / signups.value.funnel.signedUp) * 100)
+                  : 0,
+                good: false,
+              },
+              {
+                label: "Approved",
+                sub: `${signups.value.funnel.submitted ? Math.round((signups.value.funnel.approved / signups.value.funnel.submitted) * 100) : 0}% of submitted`,
+                count: signups.value.funnel.approved,
+                pct: signups.value.funnel.signedUp
+                  ? Math.round((signups.value.funnel.approved / signups.value.funnel.signedUp) * 100)
+                  : 0,
+                good: true,
+              },
+            ].map((row) => (
+              <div key={row.label} className={s.funnelRow}>
+                <div>
+                  <span className={s.funnelLabel}>{row.label}</span>
+                  <span className={s.funnelSub}>{row.sub}</span>
+                </div>
+                <div className={s.funnelTrack}>
+                  <div
+                    className={`${s.funnelFill} ${row.good ? s.funnelFillGood : ""}`}
+                    style={{ width: `${Math.max(row.count > 0 ? 4 : 0, Math.min(100, row.pct))}%` }}
+                  />
+                </div>
+                <div className={s.funnelMetric}>
+                  {row.count}
+                  <span className={s.funnelPct}>({row.pct}%)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className={s.two}>
         <section className={s.panel}>

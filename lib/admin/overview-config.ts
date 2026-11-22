@@ -23,7 +23,7 @@ export const TABLES = {
   bioEdits: {
     table: "profile_edits",
     statusColumn: "status",
-    waitingStatus: "pending",
+    waitingStatus: "pending_review",
     createdColumn: "created_at",
   },
 

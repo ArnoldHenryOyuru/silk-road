@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { initiateCheckout } from './actions'
 import PhoneField from './PhoneField'
+import EmailVerifyModal from '@/components/EmailVerifyModal'
 import { PLANS, CURRENCY, formatUgx, type PlanId } from '@/lib/payments/plans'
 import { paymentProvider } from '@/lib/payments/provider'
+import type { MemberStage } from '@/lib/member-stage'
 import styles from './subscribe.module.css'
 
 const CheckIcon = () => (
@@ -22,32 +25,48 @@ export default function SubscribeView({
   isSubscribed,
   endDate,
   defaultPhone = null,
+  stage = 'approved',
+  email = '',
+  emailVerified: initialEmailVerified = true,
+  hasPausedSubscription = false,
 }: {
   isSubscribed: boolean
   endDate: string | null
   defaultPhone?: string | null
+  stage?: MemberStage
+  email?: string
+  emailVerified?: boolean
+  hasPausedSubscription?: boolean
 }) {
   const router = useRouter()
   const [plan, setPlan] = useState<PlanId>('weekly')
   const [phone, setPhone] = useState(defaultPhone ?? '')
   const [subscribing, setSubscribing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emailVerified, setEmailVerified] = useState(initialEmailVerified)
+  const [otpOpen, setOtpOpen] = useState(false)
 
   async function handleSubscribe() {
     setError(null)
+    if (!emailVerified) {
+      setOtpOpen(true)
+      return
+    }
+
     setSubscribing(true)
     const result = await initiateCheckout(plan, phone)
     if ('error' in result) {
+      if (result.needsEmailVerification) {
+        setOtpOpen(true)
+      }
       setError(result.error)
       setSubscribing(false)
       return
     }
     if ('redirectUrl' in result) {
-      // Pesapal: keep the button disabled while the browser leaves for its page.
       window.location.href = result.redirectUrl
       return
     }
-    // Nylon Pay: the prompt is on its way to the phone; the waiting page takes over.
     router.push(`/subscribe/callback?ref=${encodeURIComponent(result.reference)}`)
   }
 
@@ -63,21 +82,89 @@ export default function SubscribeView({
             <div className={`${styles.statusValue} ${styles.active}`}>
               Active{endDate ? ` · until ${formatDate(endDate)}` : ''}
             </div>
-            <div className={styles.statusNote}>You can contact anyone on Discover until then.</div>
+            <div className={styles.statusNote}>
+              {stage === 'pending_review'
+                ? 'Your profile is in review: you have 1 contact a day right now, and your full plan allowance unlocks as soon as you are approved.'
+                : 'You can contact anyone on Discover until then.'}
+            </div>
           </div>
           <button className={styles.secondaryBtn} onClick={() => router.push('/discover')}>
             Browse Discover
           </button>
         </>
+      ) : hasPausedSubscription ? (
+        <>
+          <div className={`${styles.statusCard} ${styles.inactive}`}>
+            <div className={styles.statusLabel}>Plan paused</div>
+            <div className={`${styles.statusValue} ${styles.inactive}`}>Waiting on profile updates</div>
+            <div className={styles.statusNote}>
+              Your plan was paused when your profile needed changes. Resubmit your profile to resume it, or request a refund within 14 days.
+            </div>
+          </div>
+          <Link href="/pending-review" className={styles.secondaryBtn}>
+            Manage status &amp; plan
+          </Link>
+        </>
+      ) : stage === 'draft' ? (
+        <>
+          <div className={`${styles.statusCard} ${styles.inactive}`}>
+            <div className={styles.statusLabel}>Complete profile first</div>
+            <div className={`${styles.statusValue} ${styles.inactive}`}>Profile checklist unfinished</div>
+            <div className={styles.statusNote}>
+              Finish and submit your profile checklist first. Once submitted, you can subscribe right away and contact up to 1 person a day while in review.
+            </div>
+          </div>
+          <Link href="/onboarding/profile" className={styles.secondaryBtn}>
+            Go to profile checklist
+          </Link>
+        </>
+      ) : stage === 'rejected' ? (
+        <>
+          <div className={`${styles.statusCard} ${styles.inactive}`}>
+            <div className={styles.statusLabel}>Profile needs updates</div>
+            <div className={`${styles.statusValue} ${styles.inactive}`}>Resubmit before subscribing</div>
+            <div className={styles.statusNote}>
+              Update your profile and resubmit it for review before starting a subscription.
+            </div>
+          </div>
+          <Link href="/pending-review" className={styles.secondaryBtn}>
+            Review rejection details
+          </Link>
+        </>
       ) : (
         <>
           <div className={`${styles.statusCard} ${styles.inactive}`}>
             <div className={styles.statusLabel}>Status</div>
-            <div className={`${styles.statusValue} ${styles.inactive}`}>Not subscribed</div>
+            <div className={`${styles.statusValue} ${styles.inactive}`}>
+              {stage === 'pending_review' ? 'Pending review · Ready to subscribe' : 'Not subscribed'}
+            </div>
+            {stage === 'pending_review' && (
+              <div className={styles.statusNote}>
+                Subscribing while in review unlocks 1 contact/day immediately, expanding to your full plan limit once approved.
+              </div>
+            )}
           </div>
 
+          {!emailVerified && (
+            <div className={`${styles.statusCard} ${styles.inactive}`} style={{ marginBottom: 18 }}>
+              <div className={styles.statusLabel}>Email verification required</div>
+              <div className={styles.statusNote} style={{ marginTop: 4 }}>
+                Verify your email ({email}) with a 6-digit code before checking out.
+              </div>
+              <button type="button" className={styles.secondaryBtn} onClick={() => setOtpOpen(true)}>
+                Verify email now
+              </button>
+            </div>
+          )}
+
           <div className={styles.benefitList}>
-            {['Contact anyone via WhatsApp', `Up to ${PLANS.weekly.dailyContacts} new contacts a day (${PLANS.monthly.dailyContacts} on Monthly)`, 'Free account deletion, anytime'].map((b) => (
+            {[
+              'Contact anyone via WhatsApp',
+              stage === 'pending_review'
+                ? `1 contact/day while in review (${PLANS.weekly.dailyContacts}/day Weekly or ${PLANS.monthly.dailyContacts}/day Monthly after approval)`
+                : `Up to ${PLANS.weekly.dailyContacts} new contacts a day (${PLANS.monthly.dailyContacts} on Monthly)`,
+              'Free account deletion, anytime',
+            ].map((b) => (
               <div key={b} className={styles.benefitItem}>
                 <span className={styles.benefitCheck}>
                   <CheckIcon />
@@ -117,7 +204,9 @@ export default function SubscribeView({
               ? paymentProvider === 'nylon'
                 ? 'Sending prompt…'
                 : 'Taking you to payment…'
-              : `Subscribe — ${formatUgx(PLANS[plan].amount)} ${CURRENCY}`}
+              : emailVerified
+                ? `Subscribe — ${formatUgx(PLANS[plan].amount)} ${CURRENCY}`
+                : 'Verify email & subscribe'}
           </button>
           <div className={styles.fine}>
             {paymentProvider === 'nylon'
@@ -127,6 +216,17 @@ export default function SubscribeView({
           </div>
         </>
       )}
+
+      <EmailVerifyModal
+        open={otpOpen}
+        email={email}
+        onClose={() => setOtpOpen(false)}
+        onVerified={() => {
+          setEmailVerified(true)
+          setOtpOpen(false)
+          setError(null)
+        }}
+      />
     </main>
   )
 }

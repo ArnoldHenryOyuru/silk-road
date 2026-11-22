@@ -35,10 +35,13 @@ export default async function EditProfilePage() {
 
   const { data: accountRow } = await supabase.from('users').select('phone_number').eq('id', user.id).single()
 
-  const visiblePhotos = (profile.profile_photos ?? []).filter((p: any) => p.status !== 'rejected')
+  type EditPhotoRow = { id: string; image_url: string; status: string; is_primary: boolean }
+  const visiblePhotos = ((profile.profile_photos ?? []) as EditPhotoRow[]).filter(
+    (p) => p.status !== 'rejected'
+  )
 
   const photos = await Promise.all(
-    visiblePhotos.map(async (p: any) => {
+    visiblePhotos.map(async (p) => {
       const { data } = await supabase.storage.from('profile-photos').createSignedUrl(p.image_url, 3600)
       return {
         id: p.id,

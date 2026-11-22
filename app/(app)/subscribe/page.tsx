@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getMemberStageSummary } from '@/lib/member-stage'
 import SubscribeView from './SubscribeView'
 
 export default async function SubscribePage() {
@@ -6,26 +8,23 @@ export default async function SubscribePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return null // (app)/layout.tsx already redirects signed-out users
+  if (!user) return null
 
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('end_date')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .gte('end_date', new Date().toISOString())
-    .order('end_date', { ascending: false })
-    .maybeSingle()
-
-  // Pre-fills the mobile money number field with the number they signed up with
-  // (they can change it: the number they pay with isn't always their WhatsApp number).
-  const { data: account } = await supabase.from('users').select('phone_number').eq('id', user.id).maybeSingle()
+  const admin = createAdminClient()
+  const [stageSummary, { data: account }] = await Promise.all([
+    getMemberStageSummary(admin, user.id, user.email_confirmed_at),
+    admin.from('users').select('phone_number').eq('id', user.id).maybeSingle(),
+  ])
 
   return (
     <SubscribeView
-      isSubscribed={!!subscription}
-      endDate={subscription?.end_date ?? null}
+      isSubscribed={Boolean(stageSummary.activeSubscription)}
+      endDate={stageSummary.activeSubscription?.endDate ?? null}
       defaultPhone={account?.phone_number ?? null}
+      stage={stageSummary.stage}
+      email={user.email ?? ''}
+      emailVerified={stageSummary.emailVerified}
+      hasPausedSubscription={Boolean(stageSummary.pausedSubscription)}
     />
   )
 }

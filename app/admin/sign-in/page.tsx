@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { adminSignIn } from './actions'
+import { isSupabaseConfigured } from '@/lib/supabase/demo-mode'
 import styles from './admin-sign-in.module.css'
 
 export default function AdminSignInPage() {
@@ -43,6 +44,26 @@ export default function AdminSignInPage() {
           <button type="submit" disabled={pending}>
             {pending ? 'Signing in…' : 'Sign in'}
           </button>
+          {!isSupabaseConfigured() && (
+            <button
+              type="button"
+              disabled={pending}
+              style={{ marginTop: 8, background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+              onClick={async () => {
+                setError(null)
+                setPending(true)
+                const fd = new FormData()
+                fd.set('email', 'admin@silkroad.demo')
+                fd.set('password', 'admin1234')
+                const res = await adminSignIn(fd)
+                setPending(false)
+                if ('error' in res) setError(res.error)
+                else router.push('/admin')
+              }}
+            >
+              Demo Admin (admin@silkroad.demo)
+            </button>
+          )}
         </form>
       </div>
     </div>

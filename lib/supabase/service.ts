@@ -1,17 +1,18 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createDemoClient } from './demo-store'
+import { isSupabaseAdminConfigured } from './demo-mode'
 
 /**
  * Service-role client — bypasses RLS entirely.
- *
- * Server-only. Never import from a Client Component, and never prefix
- * SUPABASE_SERVICE_ROLE_KEY with NEXT_PUBLIC_.
- *
- * Used for: the phone-number lookup on WhatsApp contact (spec §9's
- * high-scrutiny phone-exposure event), and payment-webhook writes to
- * `subscriptions`. Every call site should do its own authorization check
- * before touching this client — it will happily do whatever you ask.
+ * Falls back to the in-memory demo store when Supabase secrets are unset.
  */
-export function createServiceClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createServiceClient(): ReturnType<typeof createSupabaseClient<any>> {
+  if (!isSupabaseAdminConfigured()) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return createDemoClient({ getUserId: () => null }) as unknown as ReturnType<typeof createSupabaseClient<any>>
+  }
+
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

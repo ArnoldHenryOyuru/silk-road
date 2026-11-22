@@ -28,7 +28,7 @@ export default function TestConnectionPage() {
       {status === 'checking' && <p>Checking…</p>}
       {status === 'ok' && <p style={{ color: 'green' }}>✅ Connected to Supabase successfully.</p>}
       {status === 'error' && (
-        <p style={{ color: 'red' }}>❌ Something's wrong: {detail}</p>
+        <p style={{ color: 'red' }}>❌ Something&apos;s wrong: {detail}</p>
       )}
     </div>
   )

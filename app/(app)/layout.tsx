@@ -33,7 +33,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   let avatarUrl: string | null = null
   if (profile) {
-    const approvedPhoto = (profile.profile_photos ?? []).find((p: any) => p.status === 'approved')
+    type ProfilePhotoRow = { image_url: string; status: string; is_primary?: boolean }
+    const photoRows = (profile.profile_photos ?? []) as ProfilePhotoRow[]
+    const approvedPhoto = photoRows.find((p) => p.status === 'approved')
     if (approvedPhoto) {
       const { data: signed } = await supabase.storage
         .from('profile-photos')

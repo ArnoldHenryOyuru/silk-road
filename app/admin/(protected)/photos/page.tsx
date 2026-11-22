@@ -11,14 +11,21 @@ export default async function PendingPhotosPage() {
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
 
+  type PhotoQueueRow = {
+    id: string
+    image_url: string
+    is_primary: boolean
+    profiles?: { display_name?: string; age?: number } | Array<{ display_name?: string; age?: number }> | null
+  }
   const cards: PendingPhotoCard[] = await Promise.all(
-    (photos ?? []).map(async (p: any) => {
+    ((photos ?? []) as PhotoQueueRow[]).map(async (p) => {
+      const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
       const { data } = await service.storage.from('profile-photos').createSignedUrl(p.image_url, 3600)
       return {
         id: p.id,
         url: data?.signedUrl ?? '',
-        displayName: p.profiles?.display_name ?? 'Unknown',
-        age: p.profiles?.age ?? 0,
+        displayName: profile?.display_name ?? 'Unknown',
+        age: profile?.age ?? 0,
         isPrimary: !!p.is_primary,
       }
     })

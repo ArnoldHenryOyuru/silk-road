@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { ADMIN_ROUTES, TABLES } from "./overview-config";
 
 type Row = Record<string, unknown>;
@@ -22,11 +22,7 @@ export type DayBar = { label: string; total: number; approved: number };
 type QueueResult = { queue: Queue; items: Item[] };
 
 export function serviceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } },
-  );
+  return createServiceClient();
 }
 type Db = ReturnType<typeof serviceClient>;
 
@@ -145,13 +141,39 @@ async function genericQueue(
   };
 }
 
+async function paidAwaitingQueue(db: Db, now: number): Promise<Queue> {
+  const [{ data: pendingProfiles, error: profErr }, { data: activeSubs, error: subErr }] = await Promise.all([
+    db
+      .from("profiles")
+      .select("user_id, created_at")
+      .eq("status", TABLES.profiles.waitingStatus)
+      .order("created_at", { ascending: true })
+      .limit(500),
+    db
+      .from(TABLES.subscriptions.table)
+      .select("user_id")
+      .eq(TABLES.subscriptions.statusColumn, TABLES.subscriptions.activeStatus)
+      .gt(TABLES.subscriptions.expiresColumn ?? "end_date", iso(now))
+      .limit(2000),
+  ]);
+  if (profErr) throw new Error(profErr.message);
+  if (subErr) throw new Error(subErr.message);
+
+  const activeUsers = new Set((activeSubs ?? []).map((s) => String(s.user_id)));
+  const matched = (pendingProfiles ?? []).filter((p) => activeUsers.has(String(p.user_id)));
+  return {
+    count: matched.length,
+    oldest: matched.length ? String(matched[0].created_at) : null,
+  };
+}
+
 /* ---------- growth ---------- */
 
 async function signupStats(db: Db, days: number, start: number, prev: number) {
   const cur = check(
     await db
       .from("profiles")
-      .select("created_at, status")
+      .select("user_id, created_at, status")
       .gte("created_at", iso(start))
       .limit(5000),
   );
@@ -169,14 +191,43 @@ async function signupStats(db: Db, days: number, start: number, prev: number) {
     total: 0,
     approved: 0,
   }));
+  let draft = 0;
+  let submitted = 0;
+  let approved = 0;
+  let rejected = 0;
+  let pendingReview = 0;
+
   for (const r of rows) {
+    const st = String(r.status ?? "draft");
+    if (st === "draft") {
+      draft += 1;
+    } else {
+      submitted += 1;
+      if (st === TABLES.profiles.approvedStatus) approved += 1;
+      else if (st === "rejected") rejected += 1;
+      else pendingReview += 1;
+    }
+
     const i = Math.floor((new Date(String(r.created_at)).getTime() - start) / DAY);
     if (i >= 0 && i < days) {
       perDay[i].total += 1;
       if (r.status === TABLES.profiles.approvedStatus) perDay[i].approved += 1;
     }
   }
-  return { current: rows.length, previous: before.count ?? 0, perDay };
+
+  return {
+    current: rows.length,
+    previous: before.count ?? 0,
+    perDay,
+    funnel: {
+      signedUp: rows.length,
+      draft,
+      submitted,
+      pendingReview,
+      approved,
+      rejected,
+    },
+  };
 }
 
 async function subscriberStats(db: Db, now: number) {
@@ -270,8 +321,9 @@ export async function getOverview(days: number) {
   const start = dayStart(now) - (days - 1) * DAY;
   const prev = start - days * DAY;
 
-  const [p, ph, bio, rep, sg, subs, rev, conv] = await Promise.all([
+  const [p, paidAwaiting, ph, bio, rep, sg, subs, rev, conv] = await Promise.all([
     safe(() => profilesQueue(db)),
+    safe(() => paidAwaitingQueue(db, now)),
     safe(() => photosQueue(db)),
     safe(() =>
       genericQueue(db, TABLES.bioEdits, "bio", "Bio change", ADMIN_ROUTES.bioEdits),
@@ -299,7 +351,13 @@ export async function getOverview(days: number) {
   return {
     now,
     days,
-    queues: { profiles: q(p), photos: q(ph), bioEdits: q(bio), reports: q(rep) },
+    queues: {
+      paidAwaiting,
+      profiles: q(p),
+      photos: q(ph),
+      bioEdits: q(bio),
+      reports: q(rep),
+    },
     signups: sg,
     subscribers: subs,
     revenue: rev,

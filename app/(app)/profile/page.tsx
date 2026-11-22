@@ -6,13 +6,19 @@ export default async function MyProfilePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return null // (app)/layout.tsx already redirects signed-out users
+  if (!user) return null
 
-  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, status')
+    .eq('user_id', user.id)
+    .maybeSingle()
 
-  if (!profile) {
-    // Hasn't created a profile yet — send them to do that instead.
+  if (!profile || profile.status === 'draft') {
     redirect('/onboarding/profile')
+  }
+  if (profile.status === 'rejected') {
+    redirect('/pending-review')
   }
 
   redirect(`/profile/${profile.id}`)

@@ -483,3 +483,133 @@
   margin: 10px 0 0;
   line-height: 1.5;
 }
+
+/* ---- Checklist layout (Batch 2) ---- */
+.checklistHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.progressCount {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+.checklistStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.checkItem {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.checkItemHeader {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 15px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.checkItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.checkCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.checkCircle.done {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+.checkItemTitle {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.checkItemMeta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.checkTag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-secondary) 14%, transparent);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.checkTag.done {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+.checkItemBody {
+  padding: 4px 16px 18px;
+  border-top: 1px solid var(--border);
+}
+.sectionSaveBtn {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 10%, var(--background));
+  color: var(--accent-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.sectionSaveBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.rejectBanner {
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  font-size: 13px;
+  line-height: 1.5;
+}
+.rejectBannerTitle {
+  font-weight: 800;
+  color: var(--danger);
+  margin-bottom: 4px;
+}
+.browseNote {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.browseNote a {
+  color: var(--accent-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+

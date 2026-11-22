@@ -20,7 +20,8 @@ export default function EnablePush() {
     ;(async () => {
       const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
       const standalone =
-        window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (navigator as Navigator & { standalone?: boolean }).standalone === true
 
       // iPhone Safari only exposes push once the site is added to the Home Screen
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -80,7 +81,7 @@ export default function EnablePush() {
     }
   }
 
-  if (state === 'loading' || state === 'unsupported') return null
+  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || state === 'loading' || state === 'unsupported') return null
 
   if (state === 'install') {
     return (

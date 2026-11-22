@@ -1,12 +1,19 @@
 import 'server-only'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Minimal Pesapal API 3.0 client (server only).
- * Env: PESAPAL_CONSUMER_KEY, PESAPAL_CONSUMER_SECRET, PESAPAL_BASE_URL
- *   live:    https://pay.pesapal.com/v3
- *   sandbox: https://cybqa.pesapal.com/pesapalv3
- * Never log the key, the secret or the token.
+ * Falls back to a deterministic in-app sandbox when PESAPAL_* secrets are unset.
  */
+
+export function isPesapalConfigured(): boolean {
+  return Boolean(
+    process.env.PESAPAL_CONSUMER_KEY?.trim() &&
+      process.env.PESAPAL_CONSUMER_SECRET?.trim() &&
+      process.env.PESAPAL_BASE_URL?.trim() &&
+      process.env.PESAPAL_IPN_ID?.trim()
+  )
+}
 
 function config() {
   const key = process.env.PESAPAL_CONSUMER_KEY
@@ -36,7 +43,6 @@ async function getToken(): Promise<string> {
   const data = await res.json().catch(() => null)
   if (!res.ok || !data?.token || hasError(data.error)) throw new Error('Pesapal authentication failed')
 
-  // Tokens last about 5 minutes; refresh a little early.
   const parsed = Date.parse(data.expiryDate)
   const fallback = Date.now() + 4 * 60_000
   cached = { token: data.token, expiresAt: Number.isFinite(parsed) ? Math.min(parsed, fallback) : fallback }
@@ -59,7 +65,16 @@ export async function submitOrder(input: {
   callbackUrl: string
   ipnId: string
   email: string
-}): Promise<{ orderTrackingId: string; redirectUrl: string }> {
+}): Promise<{ orderTrackingId: string; redirectUrl: string; sandbox?: boolean }> {
+  if (!isPesapalConfigured()) {
+    const orderTrackingId = `sandbox-${input.merchantReference}`
+    return {
+      orderTrackingId,
+      redirectUrl: `/subscribe/callback?OrderTrackingId=${encodeURIComponent(orderTrackingId)}`,
+      sandbox: true,
+    }
+  }
+
   const { base } = config()
   const res = await fetch(`${base}/api/Transactions/SubmitOrderRequest`, {
     method: 'POST',
@@ -93,6 +108,28 @@ export type PesapalTransactionStatus = {
 }
 
 export async function getTransactionStatus(orderTrackingId: string): Promise<PesapalTransactionStatus> {
+  if (!isPesapalConfigured() && orderTrackingId.startsWith('sandbox-')) {
+    const merchantReference = orderTrackingId.slice('sandbox-'.length)
+    const admin = createAdminClient()
+    const { data: tx } = await admin
+      .from('payment_transactions')
+      .select('amount, currency, merchant_reference')
+      .eq('merchant_reference', merchantReference)
+      .maybeSingle()
+
+    if (!tx) throw new Error('Sandbox transaction not found')
+
+    return {
+      payment_method: 'Sandbox MoMo',
+      amount: Number(tx.amount),
+      confirmation_code: `SBX-${merchantReference.slice(0, 8)}`,
+      payment_status_description: 'Completed (Sandbox)',
+      status_code: 1,
+      merchant_reference: tx.merchant_reference,
+      currency: tx.currency,
+    }
+  }
+
   const { base } = config()
   const res = await fetch(
     `${base}/api/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`,

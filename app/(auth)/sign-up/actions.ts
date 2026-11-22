@@ -3,35 +3,38 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeUgandaPhone } from '@/lib/phone'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
+import { verifySignUpHumanCheck } from '@/lib/security/turnstile'
+import { isPhoneBlocklisted } from '@/lib/member-stage'
 
 type SignUpResult = { error: string } | { success: true }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const GENERIC_ERROR = 'Could not create your account. Please try again.'
 const NUMBER_TAKEN = 'That WhatsApp number is already linked to an account. Try signing in instead.'
+const NUMBER_BLOCKED = 'This WhatsApp number cannot be used on Silk Road.'
 
-/**
- * Brief sign-up: name, WhatsApp number, email, password. Nothing else.
- *
- * What it does, in order (every check is repeated here on the server, because
- * the page's checks can be skipped by anyone calling this action directly):
- *   1. validate the form
- *   2. refuse a WhatsApp number that already belongs to someone
- *   3. create the account and sign the member in
- *   4. save the number and the Terms acceptance on public.users
- *   5. create a 'draft' profile (name only). A draft is invisible everywhere:
- *      not in the review queues, Discover or the homepage teaser.
- * If step 4 or 5 fails, the account is deleted again so nobody is left with a
- * half-made account they can't sign up with a second time.
- *
- * Needs Supabase Authentication -> Providers -> Email -> "Confirm email" OFF.
- * Email verification now happens when the member submits their profile.
- */
 export async function signUp(formData: FormData): Promise<SignUpResult> {
-  // Honeypot: a hidden field real people never fill in. A stopgap against the
-  // simplest bots until rate limiting and CAPTCHA arrive.
-  if (String(formData.get('website') || '').trim() !== '') {
-    return { error: GENERIC_ERROR }
+  const ip = await getClientIp()
+  const ipLimit = await checkRateLimit(`signup:ip:${ip}`, 8, 15 * 60_000)
+  if (!ipLimit.ok) {
+    return {
+      error: `Too many sign-up attempts from your connection. Please wait ${Math.ceil(ipLimit.retryAfterSec / 60)} minute(s) and try again.`,
+    }
+  }
+
+  const honeypot = String(formData.get('website') || '')
+  const turnstileToken = String(formData.get('cf-turnstile-response') || '')
+  const challengeToken = String(formData.get('challengeToken') || '')
+
+  const humanCheck = await verifySignUpHumanCheck({
+    turnstileToken,
+    challengeToken,
+    honeypot,
+    remoteIp: ip,
+  })
+  if (!humanCheck.ok) {
+    return { error: humanCheck.error }
   }
 
   const displayName = String(formData.get('displayName') || '').trim()
@@ -49,6 +52,12 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
   if (!EMAIL_RE.test(email) || email.length > 254) {
     return { error: 'Enter a valid email address.' }
   }
+
+  const emailLimit = await checkRateLimit(`signup:email:${email}`, 4, 15 * 60_000)
+  if (!emailLimit.ok) {
+    return { error: 'Too many attempts for this email. Please wait a few minutes and try again.' }
+  }
+
   if (password.length < 8) {
     return { error: 'Password must be at least 8 characters.' }
   }
@@ -61,13 +70,16 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
 
   const admin = createAdminClient()
 
-  // 2. Number already taken? Checked BEFORE the account exists, so a refused
-  //    sign-up leaves nothing behind. The unique index on users.phone_number
-  //    is the final guard if two people race.
+  // Refuse blocklisted WhatsApp numbers before creating an auth account.
+  if (await isPhoneBlocklisted(admin, phone)) {
+    return { error: NUMBER_BLOCKED }
+  }
+
+  // Number already taken? Checked BEFORE the account exists.
   const { data: taken, error: lookupError } = await admin
     .from('users')
     .select('id')
-    .eq('phone_number', phone)
+    .in('phone_number', [phone, `+${phone}`])
     .limit(1)
   if (lookupError) {
     console.error('signup number lookup failed', lookupError.code)
@@ -77,7 +89,7 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
     return { error: NUMBER_TAKEN }
   }
 
-  // 3. Create the account (this also signs the member in).
+  // Create the account and sign the member in.
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signUp({ email, password })
 
@@ -100,8 +112,6 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
     return { error: GENERIC_ERROR }
   }
   if (!data.session) {
-    // No session means Supabase is still waiting for an email confirmation:
-    // "Confirm email" has not been turned off yet.
     console.error('signup returned no session: turn OFF Confirm email in Supabase')
     return { error: 'Sign-up is being updated. Please try again in a few minutes.' }
   }
@@ -115,7 +125,6 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
     }
   }
 
-  // 4. Save the number and the Terms acceptance.
   const { data: savedUser, error: userError } = await admin
     .from('users')
     .update({ phone_number: phone, terms_accepted_at: new Date().toISOString() })
@@ -130,8 +139,6 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
     return { error: GENERIC_ERROR }
   }
 
-  // 5. The draft profile. Status 'draft' is set here, by the server, and
-  //    members can't write that column themselves.
   const { error: profileError } = await admin.from('profiles').insert({
     user_id: user.id,
     display_name: displayName,

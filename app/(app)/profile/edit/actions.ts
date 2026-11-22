@@ -1,8 +1,10 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createServiceClient } from '@/lib/supabase/service'
 import { normalizeUgandaPhone } from '@/lib/phone'
+import { isPhoneBlocklisted } from '@/lib/member-stage'
 
 function calculateAge(dob: string): number {
   const birthDate = new Date(dob)
@@ -62,7 +64,21 @@ export async function updateProfile(formData: FormData) {
     return { error: 'Enter a valid Ugandan mobile number (e.g. 07XXXXXXXX).' }
   }
 
-  await supabase.from('users').update({ phone_number: normalizedPhone }).eq('id', user.id)
+  const admin = createAdminClient()
+  if (await isPhoneBlocklisted(admin, normalizedPhone)) {
+    return { error: 'This WhatsApp number cannot be used on Silk Road.' }
+  }
+
+  const { error: phoneError } = await supabase
+    .from('users')
+    .update({ phone_number: normalizedPhone })
+    .eq('id', user.id)
+  if (phoneError) {
+    if (phoneError.code === '23505') {
+      return { error: 'That WhatsApp number is already linked to another account.' }
+    }
+    return { error: 'Could not update your WhatsApp number.' }
+  }
 
   // Campus, age, and preferences take effect immediately — no review needed.
   const { error: updateError } = await supabase

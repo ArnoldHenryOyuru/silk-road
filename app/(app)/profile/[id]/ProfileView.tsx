@@ -2,18 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toggleLike, getContactLink, reportProfile, blockUser } from './actions'
 import { initiateCheckout } from '../../subscribe/actions'
 import { PLANS, CURRENCY, formatUgx, type PlanId } from '@/lib/payments/plans'
 import { paymentProvider } from '@/lib/payments/provider'
+import type { MemberStage } from '@/lib/member-stage'
 import PhoneField from '../../subscribe/PhoneField'
+import EmailVerifyModal from '@/components/EmailVerifyModal'
 import styles from './profile-view.module.css'
 
 export interface ProfileViewData {
   id: string
   displayName: string
-  age: number
-  campus: string
+  age: number | null
+  campus: string | null
   bio: string | null
   lookingFor: string | null
   interests: string[]
@@ -122,10 +125,16 @@ export default function ProfileView({
   profile,
   isSubscribed,
   isOwner = false,
+  viewerStage = 'approved',
+  email = '',
+  emailVerified: initialEmailVerified = true,
 }: {
   profile: ProfileViewData
   isSubscribed: boolean
   isOwner?: boolean
+  viewerStage?: MemberStage
+  email?: string
+  emailVerified?: boolean
 }) {
   const router = useRouter()
   const [current, setCurrent] = useState(0)
@@ -133,16 +142,19 @@ export default function ProfileView({
   const [overflowOpen, setOverflowOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reportSent, setReportSent] = useState(false)
+  const [reportError, setReportError] = useState<string | null>(null)
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [otpOpen, setOtpOpen] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(initialEmailVerified)
   const [plan, setPlan] = useState<PlanId>('weekly')
   const [subscribing, setSubscribing] = useState(false)
   const [subscribeError, setSubscribeError] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
-  // Subscriptions now only start after a confirmed payment, so this just
-  // mirrors the server value; it can't flip to true on the client.
   const subscribed = isSubscribed
   const [contactUrl, setContactUrl] = useState<string | null>(null)
   const [contactRemaining, setContactRemaining] = useState<number | null>(null)
+  const [contactNotice, setContactNotice] = useState<string | null>(null)
   const [contactPending, setContactPending] = useState(false)
 
   const photos = profile.photoUrls.length > 0 ? profile.photoUrls : [null]
@@ -153,9 +165,10 @@ export default function ProfileView({
   }
 
   async function handleReport(reason: string) {
+    setReportError(null)
     const result = await reportProfile(profile.id, reason)
     if (result && 'error' in result) {
-      alert("We couldn't send your report. Please try again.")
+      setReportError("We couldn't send your report. Please try again.")
       return
     }
     setReportSent(true)
@@ -164,23 +177,37 @@ export default function ProfileView({
 
   async function handleSubscribe() {
     setSubscribeError(null)
+    if (!emailVerified) {
+      setOtpOpen(true)
+      return
+    }
     setSubscribing(true)
     const result = await initiateCheckout(plan, phone)
     if ('error' in result) {
+      if (result.needsEmailVerification) {
+        setOtpOpen(true)
+      }
       setSubscribeError(result.error)
       setSubscribing(false)
       return
     }
     if ('redirectUrl' in result) {
-      // Pesapal: keep the button disabled while the browser leaves for its page.
       window.location.href = result.redirectUrl
       return
     }
-    // Nylon Pay: the prompt is on its way to the phone; the waiting page takes over.
     router.push(`/subscribe/callback?ref=${encodeURIComponent(result.reference)}`)
   }
 
   async function handleContactClick() {
+    setContactNotice(null)
+    if (viewerStage === 'draft') {
+      setContactNotice('Finish and submit your profile checklist before contacting members.')
+      return
+    }
+    if (viewerStage === 'rejected') {
+      setContactNotice('Update and resubmit your profile to restore contacts.')
+      return
+    }
     if (!subscribed) {
       setModalOpen(true)
       return
@@ -195,11 +222,15 @@ export default function ProfileView({
     } else if (result.reason === 'not_subscribed') {
       setModalOpen(true)
     } else if (result.reason === 'rate_limited') {
-      alert(`You've used your ${result.limit} contacts for today. They reset at midnight.`)
+      setContactNotice(
+        `You've used your ${result.limit} contact${result.limit === 1 ? '' : 's'} for today. They reset at midnight.`
+      )
     } else if (result.reason === 'profile_not_approved') {
-      alert('Your profile needs to be approved before you can contact people.')
+      setContactNotice('Complete and submit your profile checklist before contacting members.')
+    } else if (result.reason === 'profile_rejected') {
+      setContactNotice('Update and resubmit your profile to restore contacts.')
     } else {
-      alert("We couldn't open this contact right now.")
+      setContactNotice("We couldn't open this contact right now.")
     }
   }
 
@@ -251,7 +282,8 @@ export default function ProfileView({
       <div className={styles.identityRow}>
         <div className={styles.identityLeft}>
           <h1>
-            {profile.displayName}, {profile.age}
+            {profile.displayName}
+            {profile.age ? `, ${profile.age}` : ''}
           </h1>
           {profile.verified && (
             <span className={styles.verifiedBadge}>
@@ -273,6 +305,7 @@ export default function ProfileView({
                     onClick={(e) => {
                       e.stopPropagation()
                       setOverflowOpen(false)
+                      setReportError(null)
                       setReportOpen(true)
                     }}
                   >
@@ -282,9 +315,8 @@ export default function ProfileView({
                     className={styles.overflowItem}
                     onClick={(e) => {
                       e.stopPropagation()
-                      if (confirm(`Block ${profile.displayName}? You won't see each other on Silk Road anymore.`)) {
-                        blockUser(profile.id)
-                      }
+                      setOverflowOpen(false)
+                      setBlockConfirmOpen(true)
                     }}
                   >
                     <BlockIcon /> Block user
@@ -296,9 +328,11 @@ export default function ProfileView({
         )}
       </div>
 
-      <div className={styles.metaRow}>
-        <PinIcon /> {profile.campus}
-      </div>
+      {profile.campus && (
+        <div className={styles.metaRow}>
+          <PinIcon /> {profile.campus}
+        </div>
+      )}
 
       {photos.length > 1 && (
         <>
@@ -345,6 +379,14 @@ export default function ProfileView({
           <button className={styles.contactBtn} onClick={() => router.push('/profile/edit')}>
             <EditIcon /> Edit Profile
           </button>
+        ) : viewerStage === 'draft' ? (
+          <Link href="/onboarding/profile" className={styles.contactBtn} style={{ textDecoration: 'none' }}>
+            <LockIcon /> Finish checklist to contact
+          </Link>
+        ) : viewerStage === 'rejected' ? (
+          <Link href="/pending-review" className={styles.contactBtn} style={{ textDecoration: 'none' }}>
+            <LockIcon /> Resubmit profile to contact
+          </Link>
         ) : subscribed ? (
           <>
             <button className={styles.contactBtn} onClick={handleContactClick} disabled={contactPending}>
@@ -354,6 +396,11 @@ export default function ProfileView({
               <p className={styles.contactNote}>
                 Opens WhatsApp in a new tab.
                 {contactRemaining === 0 && ' That was your last contact for today; they reset at midnight.'}
+              </p>
+            )}
+            {contactNotice && (
+              <p className={styles.contactNote} style={{ color: 'var(--danger)' }}>
+                {contactNotice}
               </p>
             )}
           </>
@@ -441,11 +488,16 @@ export default function ProfileView({
         <div className={styles.reportModalOverlay} onClick={(e) => e.target === e.currentTarget && setReportOpen(false)}>
           <div className={styles.reportModalCard}>
             {reportSent ? (
-              <p>Thanks — we'll take a look.</p>
+              <p>Thanks — we&apos;ll take a look.</p>
             ) : (
               <>
                 <div className={styles.modalTitle}>Report this profile</div>
                 <div className={styles.modalSub}>Why are you reporting {profile.displayName}?</div>
+                {reportError && (
+                  <p className={styles.modalFine} style={{ color: 'var(--danger)', textAlign: 'left' }}>
+                    {reportError}
+                  </p>
+                )}
                 {REPORT_REASONS.map((reason) => (
                   <div key={reason} className={styles.reportOption} onClick={() => handleReport(reason)}>
                     {reason}
@@ -456,6 +508,51 @@ export default function ProfileView({
           </div>
         </div>
       )}
+
+      {/* Block confirmation modal */}
+      {blockConfirmOpen && (
+        <div className={styles.reportModalOverlay} onClick={(e) => e.target === e.currentTarget && setBlockConfirmOpen(false)}>
+          <div className={styles.reportModalCard}>
+            <div className={styles.modalTitle}>Block {profile.displayName}?</div>
+            <div className={styles.modalSub}>You won&apos;t see each other on Silk Road anymore.</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+              <button
+                type="button"
+                className={styles.modalCta}
+                style={{ marginTop: 0, height: 42, background: 'var(--danger)' }}
+                onClick={() => blockUser(profile.id)}
+              >
+                Block user
+              </button>
+              <button
+                type="button"
+                className={styles.modalCta}
+                style={{
+                  marginTop: 0,
+                  height: 42,
+                  background: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border)',
+                }}
+                onClick={() => setBlockConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <EmailVerifyModal
+        open={otpOpen}
+        email={email}
+        onClose={() => setOtpOpen(false)}
+        onVerified={() => {
+          setEmailVerified(true)
+          setOtpOpen(false)
+          setSubscribeError(null)
+        }}
+      />
     </main>
   )
 }

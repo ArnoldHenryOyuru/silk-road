@@ -33,7 +33,7 @@ export default function AccountActions({ status }: { status: string }) {
       <section className={styles.section}>
         <h2 className={styles.heading}>Account under review</h2>
         <p className={styles.body}>
-          Your account is currently {status}. You can't deactivate or delete it while it's under
+          Your account is currently {status}. You can&apos;t deactivate or delete it while it&apos;s under
           review. Contact support if you have questions.
         </p>
       </section>
@@ -51,7 +51,7 @@ export default function AccountActions({ status }: { status: string }) {
         <details className={styles.details}>
           <summary className={styles.summary}>Deactivate account</summary>
           <form action={deactivateAction} className={styles.form}>
-            <p className={styles.body}>Other people won't be able to find or contact you.</p>
+            <p className={styles.body}>Other people won&apos;t be able to find or contact you.</p>
             {deactivateState.error && (
               <p role="alert" className={styles.error}>
                 {deactivateState.error}
@@ -65,7 +65,7 @@ export default function AccountActions({ status }: { status: string }) {
       <section className={`${styles.section} ${styles.danger}`}>
         <h2 className={styles.heading}>Delete account</h2>
         <p className={styles.body}>
-          Permanently delete your profile, photos and sign-in. This can't be undone, and any
+          Permanently delete your profile, photos and sign-in. This can&apos;t be undone, and any
           subscription ends immediately without a refund.
         </p>
         <details className={styles.details}>

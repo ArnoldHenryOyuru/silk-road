@@ -3,24 +3,20 @@
 import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { submitOrder } from '@/lib/pesapal'
+import { submitOrder, isPesapalConfigured } from '@/lib/pesapal'
 import { startCollection, isSandboxKey } from '@/lib/nylon'
 import { normalizeUgandaPhone } from '@/lib/phone'
 import { PLANS, CURRENCY, isPlanId, type PlanId } from '@/lib/payments/plans'
 import { paymentProvider } from '@/lib/payments/provider'
+import { getMemberStageSummary } from '@/lib/member-stage'
 
-// Pesapal sends the browser to its hosted page; Nylon Pay prompts the customer's
-// phone, so we just return the reference and the waiting page takes over.
-export type CheckoutResult = { error: string } | { redirectUrl: string } | { reference: string }
+export type CheckoutResult =
+  | { error: string; needsEmailVerification?: boolean }
+  | { redirectUrl: string }
+  | { reference: string }
 
 type Admin = ReturnType<typeof createAdminClient>
 
-/**
- * Starts a checkout with whichever gateway NEXT_PUBLIC_PAYMENT_PROVIDER selects.
- * The price comes from lib/payments/plans.ts on the server, never from the
- * browser. Nothing here activates a subscription: only the settle functions do,
- * after the provider confirms payment.
- */
 export async function initiateCheckout(plan: string, phone?: string): Promise<CheckoutResult> {
   if (!isPlanId(plan)) return { error: 'Choose a plan to continue.' }
 
@@ -35,6 +31,27 @@ export async function initiateCheckout(plan: string, phone?: string): Promise<Ch
   const { data: account } = await admin.from('users').select('status').eq('id', user.id).maybeSingle()
   if (account?.status !== 'active') {
     return { error: "Your account can't make purchases right now." }
+  }
+
+  const stageSummary = await getMemberStageSummary(admin, user.id, user.email_confirmed_at)
+
+  if (!stageSummary.emailVerified) {
+    return {
+      error: 'Verify your email with the 6-digit code before subscribing.',
+      needsEmailVerification: true,
+    }
+  }
+
+  if (stageSummary.stage === 'draft') {
+    return { error: 'Finish and submit your profile checklist before subscribing.' }
+  }
+
+  if (stageSummary.stage === 'rejected') {
+    return { error: 'Update and resubmit your profile (or manage your paused plan) before subscribing.' }
+  }
+
+  if (stageSummary.pausedSubscription) {
+    return { error: 'You already have a paused subscription that will resume when your profile is approved.' }
   }
 
   const { data: existing } = await admin
@@ -64,16 +81,10 @@ export async function initiateCheckout(plan: string, phone?: string): Promise<Ch
     : startPesapalCheckout(admin, user.id, user.email, plan)
 }
 
-/* ------------------------------------------------------------------ */
-/* Pesapal: hosted checkout page                                       */
-/* ------------------------------------------------------------------ */
 async function startPesapalCheckout(admin: Admin, userId: string, email: string, plan: PlanId): Promise<CheckoutResult> {
-  const appUrl = process.env.APP_URL
-  const ipnId = process.env.PESAPAL_IPN_ID
-  if (!appUrl || !ipnId) {
-    console.error('Payments are not configured: APP_URL or PESAPAL_IPN_ID is missing')
-    return { error: "Payments aren't available right now. Please try again later." }
-  }
+  const live = isPesapalConfigured()
+  const appUrl = process.env.APP_URL || 'http://localhost:3000'
+  const ipnId = process.env.PESAPAL_IPN_ID || 'sandbox-ipn'
 
   const selected = PLANS[plan]
   const merchantReference = `SR-${randomUUID()}`
@@ -91,7 +102,7 @@ async function startPesapalCheckout(admin: Admin, userId: string, email: string,
   }
 
   try {
-    const { orderTrackingId, redirectUrl } = await submitOrder({
+    const { orderTrackingId, redirectUrl, sandbox } = await submitOrder({
       merchantReference,
       amount: selected.amount,
       currency: CURRENCY,
@@ -101,8 +112,7 @@ async function startPesapalCheckout(admin: Admin, userId: string, email: string,
       email,
     })
 
-    // Only ever send the browser to Pesapal.
-    if (!new URL(redirectUrl).hostname.endsWith('pesapal.com')) {
+    if (live && !sandbox && !new URL(redirectUrl).hostname.endsWith('pesapal.com')) {
       throw new Error('Unexpected checkout host')
     }
 
@@ -118,9 +128,6 @@ async function startPesapalCheckout(admin: Admin, userId: string, email: string,
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Nylon Pay: prompt on the customer's phone                           */
-/* ------------------------------------------------------------------ */
 async function startNylonCheckout(
   admin: Admin,
   userId: string,
@@ -128,8 +135,6 @@ async function startNylonCheckout(
   plan: PlanId,
   phoneInput: string
 ): Promise<CheckoutResult> {
-  // A sandbox key in production would let anyone "pay" with fake money and get a
-  // real subscription. Refuse unless you explicitly allow it for a test window.
   if (isSandboxKey() && process.env.VERCEL_ENV === 'production' && process.env.NYLONPAY_ALLOW_SANDBOX !== 'true') {
     console.error('Refusing checkout: Nylon Pay sandbox key is configured in production')
     return { error: "Payments aren't available right now. Please try again later." }
@@ -144,9 +149,8 @@ async function startNylonCheckout(
   const customerName = profile?.display_name || 'Silk Road member'
 
   const selected = PLANS[plan]
-  const reference = randomUUID() // Nylon Pay requires a plain UUID (no prefix)
+  const reference = randomUUID()
 
-  // The number you pay with is sent to Nylon Pay and deliberately NOT stored here.
   const { error: insertError } = await admin.from('payment_transactions').insert({
     user_id: userId,
     plan_type: plan,

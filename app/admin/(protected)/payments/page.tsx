@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/service'
 import { PLANS, isPlanId, formatUgx } from '@/lib/payments/plans'
+import RefundRequestsPanel from './RefundRequestsPanel'
+import type { AdminRefundRequestRow } from './actions'
 import styles from '../admin.module.css'
 
 const PAGE_SIZE = 25
@@ -52,26 +54,53 @@ export default async function PaymentsPage({
     .range(from, from + PAGE_SIZE - 1)
   if (plan) listQuery = listQuery.eq('plan_type', plan)
 
-  const [allTime, thisMonth, active, expiring, list] = await Promise.all([
+  const [allTime, thisMonth, active, expiring, list, refundList] = await Promise.all([
     revenueSince(),
     revenueSince(monthStart),
     service.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active').gt('end_date', nowIso),
     service.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active').gt('end_date', nowIso).lt('end_date', soon),
     listQuery,
+    service
+      .from('refund_requests')
+      .select('id, user_id, subscription_id, amount, currency, reason, status, payout_ref, admin_note, reviewed_at, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50),
   ])
 
   const rows = list.data ?? []
   const total = list.count ?? 0
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const rawRefunds = refundList.data ?? []
 
+  const allUserIds = [
+    ...new Set([
+      ...rows.map((r) => r.user_id),
+      ...rawRefunds.map((rf) => rf.user_id),
+    ].filter(Boolean)),
+  ]
   const names = new Map<string, string>()
-  if (rows.length) {
+  if (allUserIds.length) {
     const { data: profs } = await service
       .from('profiles')
       .select('user_id, display_name')
-      .in('user_id', [...new Set(rows.map((r) => r.user_id))])
+      .in('user_id', allUserIds)
     for (const p of profs ?? []) names.set(p.user_id, p.display_name)
   }
+
+  const refundRows: AdminRefundRequestRow[] = rawRefunds.map((rf) => ({
+    id: String(rf.id),
+    userId: String(rf.user_id),
+    subscriptionId: String(rf.subscription_id ?? ''),
+    memberName: names.get(String(rf.user_id)) ?? 'Member',
+    amount: Number(rf.amount ?? 0),
+    currency: String(rf.currency ?? 'UGX'),
+    reason: String(rf.reason ?? 'Profile rejected'),
+    status: String(rf.status ?? 'pending'),
+    payoutRef: rf.payout_ref ? String(rf.payout_ref) : null,
+    adminNote: rf.admin_note ? String(rf.admin_note) : null,
+    reviewedAt: rf.reviewed_at ? String(rf.reviewed_at) : null,
+    createdAt: String(rf.created_at),
+  }))
 
   const href = (over: Record<string, string | undefined>) => {
     const p = new URLSearchParams()
@@ -91,7 +120,7 @@ export default async function PaymentsPage({
   return (
     <div className={styles.main}>
       <h1 className={styles.pageTitle}>Payments</h1>
-      <p className={styles.pageSub}>Every plan purchase, newest first.</p>
+      <p className={styles.pageSub}>Every plan purchase and refund request, newest first.</p>
 
       <div className={styles.statGrid} style={{ marginBottom: 24 }}>
         {cards.map((c) => (
@@ -102,6 +131,8 @@ export default async function PaymentsPage({
           </div>
         ))}
       </div>
+
+      <RefundRequestsPanel initialRequests={refundRows} />
 
       <div className={styles.toolbar}>
         <div className={styles.pills}>
@@ -136,7 +167,25 @@ export default async function PaymentsPage({
             <tbody>
               {rows.map((r) => {
                 const cancelled = r.status === 'cancelled'
+                const paused = r.status === 'paused'
+                const refundRequested = r.status === 'refund_requested'
                 const live = r.status === 'active' && new Date(r.end_date) > now
+                const badgeClass = live
+                  ? styles.badgeGood
+                  : paused || refundRequested
+                    ? styles.badgeWarn
+                    : cancelled
+                      ? styles.badgeBad
+                      : ''
+                const badgeLabel = cancelled
+                  ? 'Cancelled'
+                  : refundRequested
+                    ? 'Refund requested'
+                    : paused
+                      ? 'Paused'
+                      : live
+                        ? 'Active'
+                        : 'Expired'
                 return (
                   <tr key={r.id}>
                     <td className={styles.cellName}>{names.get(r.user_id) ?? 'Unknown'}</td>
@@ -146,8 +195,8 @@ export default async function PaymentsPage({
                     <td className={styles.cellMuted}>{fmtDate(r.start_date)}</td>
                     <td className={styles.cellMuted}>{fmtDate(r.end_date)}</td>
                     <td>
-                      <span className={`${styles.badge} ${live ? styles.badgeGood : cancelled ? styles.badgeBad : ''}`}>
-                        {cancelled ? 'Cancelled' : live ? 'Active' : 'Expired'}
+                      <span className={`${styles.badge} ${badgeClass}`}>
+                        {badgeLabel}
                       </span>
                     </td>
                   </tr>

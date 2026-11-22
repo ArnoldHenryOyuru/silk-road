@@ -120,9 +120,12 @@ export default function DiscoverGrid({
       } else if (result.reason === 'not_subscribed') {
         router.push(`/profile/${profileId}`)
       } else if (result.reason === 'rate_limited') {
-        setNotice(`You've used your ${result.limit || contactLimit} contacts for today. They reset at midnight.`)
+        const limit = result.limit || contactLimit
+        setNotice(`You've used your ${limit} contact${limit === 1 ? '' : 's'} for today. They reset at midnight.`)
       } else if (result.reason === 'profile_not_approved') {
-        setNotice('Your profile needs to be approved before you can contact people.')
+        setNotice('Complete and submit your profile checklist before contacting members.')
+      } else if (result.reason === 'profile_rejected') {
+        setNotice('Update and resubmit your profile to restore contacts.')
       } else {
         setNotice("We couldn't open this contact right now.")
       }

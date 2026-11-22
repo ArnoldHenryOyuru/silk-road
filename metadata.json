@@ -1,0 +1,6 @@
+{
+  "name": "Silk Road",
+  "description": "A campus-focused connections platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

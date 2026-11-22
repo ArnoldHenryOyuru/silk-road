@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { signIn } from './actions'
 import { requestPasswordReset } from '../forgot-password/actions'
 import { SUPPORT_EMAIL } from '@/lib/constants'
+import { isSupabaseConfigured } from '@/lib/supabase/demo-mode'
 import styles from './sign-in.module.css'
 
 type Step = 'signin' | 'forgot' | 'sent'
@@ -129,7 +130,7 @@ export default function SignInPage() {
           Back to sign in
         </div>
         <h1>Reset your password</h1>
-        <p className={styles.subtitle}>Enter your email and we'll send a reset link. It expires in 30 minutes.</p>
+        <p className={styles.subtitle}>Enter your email and we&apos;ll send a reset link. It expires in 30 minutes.</p>
 
         <form onSubmit={handleSendReset}>
           <div className={styles.field}>
@@ -213,6 +214,74 @@ export default function SignInPage() {
       <div className={styles.switchRow}>
         New to Silk Road? <Link href="/sign-up">Create an account</Link>
       </div>
+
+      {!isSupabaseConfigured() && (
+        <div className={styles.switchRow} style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            type="button"
+            className={styles.primaryBtn}
+            style={{ background: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+            disabled={pending}
+            onClick={async () => {
+              setFieldError(null)
+              setBanner(null)
+              setPending(true)
+              const fd = new FormData()
+              fd.set('email', 'member@silkroad.demo')
+              fd.set('password', 'demo1234')
+              fd.set('next', new URLSearchParams(window.location.search).get('next') ?? '')
+              const res = await signIn(fd)
+              setPending(false)
+              if ('success' in res) router.push(res.redirectTo)
+              else setFieldError(res.error)
+            }}
+          >
+            Continue as Demo Member (Approved)
+          </button>
+          <button
+            type="button"
+            className={styles.primaryBtn}
+            style={{ background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', height: 42, fontSize: 13 }}
+            disabled={pending}
+            onClick={async () => {
+              setFieldError(null)
+              setBanner(null)
+              setPending(true)
+              const fd = new FormData()
+              fd.set('email', 'draft@silkroad.demo')
+              fd.set('password', 'demo1234')
+              fd.set('next', new URLSearchParams(window.location.search).get('next') ?? '')
+              const res = await signIn(fd)
+              setPending(false)
+              if ('success' in res) router.push(res.redirectTo)
+              else setFieldError(res.error)
+            }}
+          >
+            Demo Draft Member (Checklist &amp; OTP)
+          </button>
+          <button
+            type="button"
+            className={styles.primaryBtn}
+            style={{ background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', height: 42, fontSize: 13 }}
+            disabled={pending}
+            onClick={async () => {
+              setFieldError(null)
+              setBanner(null)
+              setPending(true)
+              const fd = new FormData()
+              fd.set('email', 'pending@silkroad.demo')
+              fd.set('password', 'demo1234')
+              fd.set('next', new URLSearchParams(window.location.search).get('next') ?? '')
+              const res = await signIn(fd)
+              setPending(false)
+              if ('success' in res) router.push(res.redirectTo)
+              else setFieldError(res.error)
+            }}
+          >
+            Demo Pending Member (1/day cap)
+          </button>
+        </div>
+      )}
     </main>
   )
 }

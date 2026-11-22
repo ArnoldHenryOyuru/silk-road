@@ -12,13 +12,22 @@ export default async function BioEditsPage() {
     .eq('field_changed', 'bio')
     .order('created_at', { ascending: true })
 
-  const cards: PendingEditCard[] = (edits ?? []).map((e: any) => ({
-    id: e.id,
-    displayName: e.profiles?.display_name ?? 'Unknown',
-    age: e.profiles?.age ?? 0,
-    oldValue: e.old_value,
-    newValue: e.new_value,
-  }))
+  type EditRow = {
+    id: string
+    old_value: string
+    new_value: string
+    profiles?: { display_name?: string; age?: number } | Array<{ display_name?: string; age?: number }> | null
+  }
+  const cards: PendingEditCard[] = ((edits ?? []) as EditRow[]).map((e) => {
+    const profile = Array.isArray(e.profiles) ? e.profiles[0] : e.profiles
+    return {
+      id: e.id,
+      displayName: profile?.display_name ?? 'Unknown',
+      age: profile?.age ?? 0,
+      oldValue: e.old_value,
+      newValue: e.new_value,
+    }
+  })
 
   return (
     <div className={styles.main}>

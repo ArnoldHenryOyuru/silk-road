@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  images: {
+    unoptimized: true,
+  },
   experimental: {
     serverActions: {
       // Default is 1MB — too small for multiple profile photos + a selfie

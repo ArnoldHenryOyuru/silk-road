@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic'
 type Hook = {
   type: 'INSERT' | 'UPDATE' | 'DELETE'
   table: string
-  record: Record<string, any> | null
-  old_record: Record<string, any> | null
+  record: Record<string, unknown> | null
+  old_record: Record<string, unknown> | null
 }
 
 export async function POST(req: Request) {
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       if (entered('pending_review')) {
         payload = {
           title: 'New profile to review',
-          body: `${r.display_name ?? 'A new member'}${r.campus ? `, ${r.campus}` : ''}`,
+          body: `${String(r.display_name ?? 'A new member')}${r.campus ? `, ${String(r.campus)}` : ''}`,
           url: '/admin/profiles',
           tag: 'profiles',
         }
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       if (entered('pending')) {
         payload = {
           title: 'New photo to review',
-          body: `${await nameOf('id', r.profile_id)} uploaded a photo`,
+          body: `${await nameOf('id', String(r.profile_id ?? ''))} uploaded a photo`,
           url: '/admin/photos',
           tag: 'photos',
         }
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       if (entered('pending_review')) {
         payload = {
           title: 'Bio edit to review',
-          body: `${await nameOf('id', r.profile_id)} changed their ${r.field_changed ?? 'profile'}`,
+          body: `${await nameOf('id', String(r.profile_id ?? ''))} changed their ${String(r.field_changed ?? 'profile')}`,
           url: '/admin/edits',
           tag: 'edits',
         }
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       if (hook.type === 'INSERT' && r.status === 'active') {
         payload = {
           title: 'Payment received',
-          body: `${await nameOf('user_id', r.user_id)} started a ${r.plan_type} plan`,
+          body: `${await nameOf('user_id', String(r.user_id ?? ''))} started a ${String(r.plan_type ?? '')} plan`,
           url: '/admin/payments',
         }
       }
