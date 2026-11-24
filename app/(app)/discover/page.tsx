@@ -2,9 +2,16 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getContactAllowance } from '@/lib/contact'
+import {
+  applyDiscoverFilters,
+  buildDiscoverHref,
+  countActiveDiscoverFilters,
+  parseDiscoverFilters,
+} from '@/lib/discover-filters'
 import type { DiscoverProfile } from '@/types/discover'
 import DiscoverGrid from './DiscoverGrid'
 import DiscoverPagination from './DiscoverPagination'
+import { DiscoverActiveFilters, DiscoverFilterButton } from './DiscoverFiltersUI'
 import styles from './discover.module.css'
 
 // 4 columns x 5 rows on a desktop screen (2 x 10 on a phone).
@@ -28,12 +35,22 @@ function isNewProfile(createdAt: string) {
 export default async function DiscoverPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string | string[] }>
+  searchParams: Promise<{
+    page?: string | string[]
+    campus?: string | string[]
+    lookingFor?: string | string[]
+    minAge?: string | string[]
+    maxAge?: string | string[]
+    verified?: string | string[]
+  }>
 }) {
   const params = await searchParams
   const rawPage = Array.isArray(params.page) ? params.page[0] : params.page
   const parsed = Number.parseInt(rawPage ?? '1', 10)
   const requestedPage = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1
+
+  const filters = parseDiscoverFilters(params)
+  const activeFilterCount = countActiveDiscoverFilters(filters)
 
   const supabase = await createClient()
 
@@ -64,11 +81,13 @@ export default async function DiscoverPage({
     .eq('is_discoverable', true)
     .neq('user_id', user.id)
   if (excludeBlocked) countQuery = countQuery.not('user_id', 'in', excludeBlocked)
+  countQuery = applyDiscoverFilters(countQuery, filters)
   const { count: total } = await countQuery
 
-  const totalPages = Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))
+  const totalMatches = total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalMatches / PAGE_SIZE))
   if (requestedPage > totalPages) {
-    redirect(totalPages === 1 ? '/discover' : `/discover?page=${totalPages}`)
+    redirect(buildDiscoverHref(filters, totalPages))
   }
   const page = requestedPage
   const from = (page - 1) * PAGE_SIZE
@@ -85,6 +104,7 @@ export default async function DiscoverPage({
     .eq('is_discoverable', true)
     .neq('user_id', user.id)
   if (excludeBlocked) profilesQuery = profilesQuery.not('user_id', 'in', excludeBlocked)
+  profilesQuery = applyDiscoverFilters(profilesQuery, filters)
 
   // These don't depend on each other, so run them together.
   const [{ data: profiles, error }, { data: likes }, allowance] = await Promise.all([
@@ -176,16 +196,7 @@ export default async function DiscoverPage({
               </p>
             )}
           </div>
-          <button className={styles.filterBtn} aria-label="Filters" type="button">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.2} strokeLinecap="round">
-              <line x1="4" y1="7" x2="20" y2="7" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="17" x2="20" y2="17" />
-              <circle cx="9" cy="7" r="1.6" fill="white" stroke="none" />
-              <circle cx="15" cy="12" r="1.6" fill="white" stroke="none" />
-              <circle cx="11" cy="17" r="1.6" fill="white" stroke="none" />
-            </svg>
-          </button>
+          <DiscoverFilterButton initialFilters={filters} />
         </div>
       </div>
 
@@ -233,15 +244,28 @@ export default async function DiscoverPage({
         </div>
       )}
 
+      <DiscoverActiveFilters filters={filters} totalMatches={totalMatches} />
+
       {feed.length > 0 ? (
         <>
           <DiscoverGrid
+            key={buildDiscoverHref(filters, page)}
             profiles={feed}
             isSubscribed={isSubscribed && allowance.limit > 0}
             contactLimit={allowance.limit}
           />
-          <DiscoverPagination page={page} totalPages={totalPages} />
+          <DiscoverPagination page={page} totalPages={totalPages} filters={filters} />
         </>
+      ) : activeFilterCount > 0 ? (
+        <div className={styles.emptyFiltered}>
+          <h2 className={styles.emptyFilteredTitle}>No members match these filters</h2>
+          <p className={styles.emptyFilteredSub}>
+            Try widening your age range, adding another campus, or clearing your active filters.
+          </p>
+          <Link href="/discover" className={styles.emptyResetBtn}>
+            Clear all filters
+          </Link>
+        </div>
       ) : (
         <p style={{ color: 'var(--text-secondary)', marginTop: 24 }}>
           No profiles to show yet — check back soon.

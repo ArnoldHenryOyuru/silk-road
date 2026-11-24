@@ -80,7 +80,7 @@ export default function DiscoverGrid({
   contactLimit: number
 }) {
   const router = useRouter()
-  const [likedState, setLikedState] = useState<Record<string, boolean>>(
+  const [likedState, setLikedState] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(profiles.map((p) => [p.id, p.liked]))
   )
   const [, startTransition] = useTransition()

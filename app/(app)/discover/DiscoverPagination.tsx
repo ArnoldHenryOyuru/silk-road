@@ -1,16 +1,23 @@
 import Link from 'next/link'
+import { buildDiscoverHref, EMPTY_DISCOVER_FILTERS, type DiscoverFilters } from '@/lib/discover-filters'
 import styles from './discover.module.css'
-
-function href(page: number) {
-  return page === 1 ? '/discover' : `/discover?page=${page}`
-}
 
 /**
  * Previous / 1 2 3 … 9 / Next. Every page is a real link (/discover?page=3), so
- * pages can be bookmarked and shared, and the back button works.
+ * pages can be bookmarked and shared, active filters are preserved, and the back button works.
  */
-export default function DiscoverPagination({ page, totalPages }: { page: number; totalPages: number }) {
+export default function DiscoverPagination({
+  page,
+  totalPages,
+  filters = EMPTY_DISCOVER_FILTERS,
+}: {
+  page: number
+  totalPages: number
+  filters?: DiscoverFilters
+}) {
   if (totalPages <= 1) return null
+
+  const href = (targetPage: number) => buildDiscoverHref(filters, targetPage)
 
   // Always show first, last and the current page with its neighbours.
   const shown = [...new Set([1, totalPages, page - 1, page, page + 1])]
