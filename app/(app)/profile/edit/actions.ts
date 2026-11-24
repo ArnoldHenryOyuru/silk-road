@@ -116,6 +116,13 @@ export async function updateProfile(formData: FormData) {
   // Photos: a slot marked for removal (existing:<id>), or a fresh file to
   // upload (new:<index>), in the same order the grid displayed them —
   // slot 0 in the final list becomes the primary photo.
+  const ALLOWED_IMAGE_EXT: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+
   const removedPhotoIds = formData.getAll('removedPhotoIds').map(String)
   const slotOrder = formData.getAll('slotOrder').map(String) // e.g. ["existing:uuid", "new:0", ...]
 
@@ -124,23 +131,36 @@ export async function updateProfile(formData: FormData) {
       .from('profile_photos')
       .select('image_url')
       .eq('id', photoId)
+      .eq('profile_id', existing.id)
       .single()
-    await supabase.from('profile_photos').delete().eq('id', photoId)
-    if (photoRow) {
-      await supabase.storage.from('profile-photos').remove([photoRow.image_url])
-    }
+    if (!photoRow) continue
+    await supabase.from('profile_photos').delete().eq('id', photoId).eq('profile_id', existing.id)
+    await supabase.storage.from('profile-photos').remove([photoRow.image_url])
   }
 
   let primaryAssigned = false
   for (const slot of slotOrder) {
     const [kind, ref] = slot.split(':')
     if (kind === 'existing') {
-      await supabase.from('profile_photos').update({ is_primary: !primaryAssigned }).eq('id', ref)
+      const { data: owned } = await supabase
+        .from('profile_photos')
+        .select('id')
+        .eq('id', ref)
+        .eq('profile_id', existing.id)
+        .maybeSingle()
+      if (!owned) continue
+      await supabase
+        .from('profile_photos')
+        .update({ is_primary: !primaryAssigned })
+        .eq('id', ref)
+        .eq('profile_id', existing.id)
       primaryAssigned = true
     } else if (kind === 'new') {
       const file = formData.get(`newPhoto:${ref}`) as File | null
       if (!file || file.size === 0) continue
-      const path = `${user.id}/${crypto.randomUUID()}-${file.name}`
+      const ext = ALLOWED_IMAGE_EXT[file.type]
+      if (!ext || file.size > MAX_PHOTO_BYTES) continue
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(path, file, { contentType: file.type })

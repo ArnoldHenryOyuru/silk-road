@@ -1,12 +1,32 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 type Result = { error: string } | { success: true }
 
 export async function adminSignIn(formData: FormData): Promise<Result> {
-  const email = String(formData.get('email') || '').trim()
+  const email = String(formData.get('email') || '').trim().toLowerCase()
   const password = String(formData.get('password') || '')
+
+  if (!email || !password) {
+    return { error: 'Enter both your email and password.' }
+  }
+
+  const ip = await getClientIp()
+  const ipLimit = await checkRateLimit(`admin-signin:ip:${ip}`, 8, 15 * 60_000)
+  if (!ipLimit.ok) {
+    return {
+      error: `Too many admin sign-in attempts. Please wait ${Math.ceil(ipLimit.retryAfterSec / 60)} minute(s) and try again.`,
+    }
+  }
+
+  const emailLimit = await checkRateLimit(`admin-signin:email:${email}`, 5, 15 * 60_000)
+  if (!emailLimit.ok) {
+    return {
+      error: `Too many attempts for this account. Please wait ${Math.ceil(emailLimit.retryAfterSec / 60)} minute(s) and try again.`,
+    }
+  }
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
