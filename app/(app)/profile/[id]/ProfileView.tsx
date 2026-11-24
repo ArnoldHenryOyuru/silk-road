@@ -10,6 +10,7 @@ import { paymentProvider } from '@/lib/payments/provider'
 import type { MemberStage } from '@/lib/member-stage'
 import PhoneField from '../../subscribe/PhoneField'
 import EmailVerifyModal from '@/components/EmailVerifyModal'
+import ProfilePhoto from '@/components/ProfilePhoto'
 import styles from './profile-view.module.css'
 
 export interface ProfileViewData {
@@ -262,7 +263,12 @@ export default function ProfileView({
         )}
         {photos.map((url, i) => (
           <div key={i} className={`${styles.gallerySlide} ${i === current ? styles.active : ''}`}>
-            {url ? <img src={url} alt="" /> : profile.initials}
+            <ProfilePhoto
+              src={url}
+              alt={`${profile.displayName} photo ${i + 1}`}
+              initials={profile.initials}
+              priority={i === 0}
+            />
           </div>
         ))}
         {photos.length > 1 && (
@@ -343,9 +349,13 @@ export default function ProfileView({
                 key={i}
                 className={`${styles.photoThumb} ${i === current ? styles.active : ''}`}
                 onClick={() => setCurrent(i)}
-                style={{ background: url ? undefined : 'var(--accent-primary)' }}
+                aria-label={`View photo ${i + 1}`}
               >
-                {url ? <img src={url} alt="" /> : profile.initials}
+                <ProfilePhoto
+                  src={url}
+                  alt={`${profile.displayName} thumbnail ${i + 1}`}
+                  initials={profile.initials}
+                />
               </button>
             ))}
           </div>

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createServerClient } from '@supabase/ssr'
 import { cookies, headers } from 'next/headers'
 import { createDemoClient } from './demo-store'
@@ -66,3 +67,11 @@ export async function createClient(): Promise<ReturnType<typeof createServerClie
     }
   )
 }
+
+export const getCachedAuthUser = cache(async () => {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return { supabase, user }
+})

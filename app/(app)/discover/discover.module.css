@@ -125,11 +125,16 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(23, 23, 28, 0.08);
+}
+.card:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 .cardPhoto {
@@ -141,12 +146,14 @@
   font-size: 32px;
   font-weight: 800;
   color: white;
+  overflow: hidden;
 }
 
 .tagNew {
   position: absolute;
   top: 8px;
   left: 8px;
+  z-index: 2;
   background: var(--accent-warm);
   color: white;
   font-size: 10px;
@@ -157,7 +164,10 @@
 }
 
 .cardBody {
-  padding: 9px 10px 11px;
+  padding: 10px 11px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .cardTopRow {
@@ -202,13 +212,14 @@
 
 .iconActions {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .iconCircle {
-  width: 22px;
-  height: 22px;
+  position: relative;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -217,12 +228,24 @@
   cursor: pointer;
   background: var(--background);
   flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
   padding: 0;
 }
+.iconCircle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.iconCircle:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.iconCircle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
 .iconCircle svg {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
 }
 .iconCircle:disabled {
   opacity: 0.5;
@@ -280,6 +303,49 @@
   width: 10px;
   height: 10px;
   flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .cardBody {
+    padding: 10px 10px 10px;
+  }
+  .cardTopRow {
+    display: contents;
+  }
+  .cardNameRow {
+    order: 1;
+    font-size: 13.5px;
+  }
+  .cardMeta {
+    order: 2;
+    font-size: 11.5px;
+    margin-top: 4px;
+  }
+  .cardTagRow {
+    order: 3;
+    font-size: 11.5px;
+    margin-top: 2px;
+  }
+  .iconActions {
+    order: 4;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+  }
+  .iconCircle {
+    width: 38px;
+    height: 38px;
+  }
+  .iconCircle::after {
+    inset: -4px;
+  }
+  .iconCircle svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* "2 of 5 contacts left today" */

@@ -805,6 +805,13 @@ class DemoQueryBuilder implements PromiseLike<DemoQueryResult> {
     return this
   }
 
+  ilike(col: string, pattern: string) {
+    const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.')
+    const re = new RegExp(`^${escaped}$`, 'i')
+    this.filters.push((r) => re.test(String(r[col] ?? '')))
+    return this
+  }
+
   not(col: string, op: string, val: unknown) {
     if (op === 'in') {
       const list = Array.isArray(val) ? val.map(String) : parseInList(String(val))

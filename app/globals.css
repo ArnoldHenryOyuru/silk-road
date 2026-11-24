@@ -56,7 +56,30 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--text-primary);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans), 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+}
+
+.sr-skeleton {
+  background: var(--surface-hover);
+  border-radius: 10px;
+  animation: srSkeletonPulse 1.35s ease-in-out infinite;
+}
+
+@keyframes srSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-skeleton {
+    animation: none;
+    opacity: 0.75;
+  }
 }

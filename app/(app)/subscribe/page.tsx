@@ -1,13 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { getCachedAuthUser } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getMemberStageSummary } from '@/lib/member-stage'
 import SubscribeView from './SubscribeView'
 
 export default async function SubscribePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { user } = await getCachedAuthUser()
   if (!user) return null
 
   const admin = createAdminClient()

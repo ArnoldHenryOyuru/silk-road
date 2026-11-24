@@ -1,15 +1,12 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server"; // match your existing helper
+import { getCachedAuthUser } from "@/lib/supabase/server";
 import AccountActions from "./AccountActions";
 import styles from "./settings.module.css";
 
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getCachedAuthUser();
 
   if (!user) redirect("/sign-in");
 

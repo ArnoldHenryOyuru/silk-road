@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { getCachedAuthUser } from '@/lib/supabase/server'
 import { getTeaser, TEASER_MIN } from '@/lib/teaser'
 import { safeNext } from '@/lib/members-only'
 import { PLANS, CURRENCY, formatUgx } from '@/lib/payments/plans'
+import ProfilePhoto from '@/components/ProfilePhoto'
 import styles from './home.module.css'
 
 export const metadata = {
@@ -60,10 +61,7 @@ export default async function HomePage({
   const params = await searchParams
   const next = safeNext(params.next, '')
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { user } = await getCachedAuthUser()
 
   // Signed-in members never need this page.
   if (user) redirect(next || '/discover')
@@ -120,12 +118,14 @@ export default async function HomePage({
             <div className={styles.teaserGrid}>
               {teaser.map((card, i) => (
                 <div className={styles.teaserCard} key={`${card.firstName}-${i}`}>
-                  <div
-                    className={styles.teaserPhoto}
-                    style={{ backgroundImage: `url(${card.photoUrl})` }}
-                    role="img"
-                    aria-label={`${card.firstName}, ${card.age}`}
-                  />
+                  <div className={styles.teaserPhoto}>
+                    <ProfilePhoto
+                      src={card.photoUrl}
+                      alt={`${card.firstName}, ${card.age}`}
+                      initials={card.firstName.slice(0, 2).toUpperCase()}
+                      priority={i < 4}
+                    />
+                  </div>
                   <div className={styles.teaserBody}>
                     <div className={styles.teaserName}>
                       {card.firstName}, {card.age}

@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { DiscoverProfile } from '@/types/discover'
+import ProfilePhoto from '@/components/ProfilePhoto'
 import { toggleLike, getContactLink } from './actions'
 import styles from './discover.module.css'
 
@@ -142,17 +143,25 @@ export default function DiscoverGrid({
           className={styles.card}
           key={p.id}
           onClick={() => router.push(`/profile/${p.id}`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              router.push(`/profile/${p.id}`)
+            }
+          }}
           role="button"
           tabIndex={0}
         >
-          <div
-            className={styles.cardPhoto}
-            style={{
-              background: p.photoUrl ? `url(${p.photoUrl}) center/cover` : GRADIENTS[i % GRADIENTS.length],
-            }}
-          >
-            {p.isNew && <span className={styles.tagNew}>New</span>}
-            {!p.photoUrl && p.initials}
+          <div className={styles.cardPhoto}>
+            <ProfilePhoto
+              src={p.photoUrl}
+              alt={p.displayName}
+              initials={p.initials}
+              gradient={GRADIENTS[i % GRADIENTS.length]}
+              priority={i < 4}
+            >
+              {p.isNew && <span className={styles.tagNew}>New</span>}
+            </ProfilePhoto>
           </div>
 
           <div className={styles.cardBody}>

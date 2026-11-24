@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PLANS, isPlanId } from '@/lib/payments/plans'
 import type { MemberStage } from '@/lib/member-stage'
@@ -95,10 +96,10 @@ async function loadAllowance(admin: Admin, viewerId: string, now: Date) {
 }
 
 /** For screens that show remaining daily contacts. Reads only the viewer's own data. */
-export async function getContactAllowance(viewerId: string): Promise<ContactAllowance> {
+export const getContactAllowance = cache(async (viewerId: string): Promise<ContactAllowance> => {
   const { allowance } = await loadAllowance(createAdminClient(), viewerId, new Date())
   return allowance
-}
+})
 
 export async function unlockContact(viewerId: string, profileId: string): Promise<ContactResult> {
   const admin = createAdminClient()

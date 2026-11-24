@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCachedAuthUser } from '@/lib/supabase/server'
 import ProfileView, { type ProfileViewData } from './ProfileView'
 
 function getInitials(name: string) {
@@ -18,11 +18,7 @@ function isNewProfile(createdAt: string) {
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getCachedAuthUser()
   if (!user) return null // (app)/layout.tsx already redirects signed-out users
 
   // Round 1: the profile, your like and your subscription don't depend on

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCachedAuthUser } from '@/lib/supabase/server'
 import { getContactAllowance } from '@/lib/contact'
 import {
   applyDiscoverFilters,
@@ -52,43 +52,27 @@ export default async function DiscoverPage({
   const filters = parseDiscoverFilters(params)
   const activeFilterCount = countActiveDiscoverFilters(filters)
 
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getCachedAuthUser()
   // (app)/layout.tsx already redirects if there's no user — this is just
   // for the TypeScript narrowing below.
   if (!user) return null
 
-  // Blocks first: blocked people must be left out BEFORE paging, otherwise
-  // pages would come back with gaps.
-  const { data: blocks } = await supabase
-    .from('blocks')
-    .select('blocker_id, blocked_id')
-    .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`)
+  // Round 1: fetch blocks, likes, and daily contact allowance concurrently.
+  const [{ data: blocks }, { data: likes }, allowance] = await Promise.all([
+    supabase
+      .from('blocks')
+      .select('blocker_id, blocked_id')
+      .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`),
+    supabase.from('likes').select('liked_profile_id').eq('liker_id', user.id),
+    getContactAllowance(user.id),
+  ])
 
   const blockedUserIds = [
     ...new Set((blocks ?? []).flatMap((b) => [b.blocker_id, b.blocked_id]).filter((id) => id !== user.id)),
   ]
   const excludeBlocked = blockedUserIds.length > 0 ? `(${blockedUserIds.join(',')})` : null
 
-  // How many pages are there?
-  let countQuery = supabase
-    .from('profiles')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'approved')
-    .eq('is_discoverable', true)
-    .neq('user_id', user.id)
-  if (excludeBlocked) countQuery = countQuery.not('user_id', 'in', excludeBlocked)
-  countQuery = applyDiscoverFilters(countQuery, filters)
-  const { count: total } = await countQuery
-
-  const totalMatches = total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalMatches / PAGE_SIZE))
-  if (requestedPage > totalPages) {
-    redirect(buildDiscoverHref(filters, totalPages))
-  }
+  // Round 2: fetch the paged feed AND exact total count in one single query.
   const page = requestedPage
   const from = (page - 1) * PAGE_SIZE
 
@@ -97,8 +81,9 @@ export default async function DiscoverPage({
     .select(
       `
       id, user_id, display_name, age, campus, looking_for, face_match_verified, created_at,
-      profile_photos ( image_url, status )
-    `
+      profile_photos ( image_url, status, is_primary )
+    `,
+      { count: 'exact' }
     )
     .eq('status', 'approved')
     .eq('is_discoverable', true)
@@ -106,18 +91,19 @@ export default async function DiscoverPage({
   if (excludeBlocked) profilesQuery = profilesQuery.not('user_id', 'in', excludeBlocked)
   profilesQuery = applyDiscoverFilters(profilesQuery, filters)
 
-  // These don't depend on each other, so run them together.
-  const [{ data: profiles, error }, { data: likes }, allowance] = await Promise.all([
-    profilesQuery
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false }) // tie-breaker: keeps pages stable
-      .range(from, from + PAGE_SIZE - 1),
-    supabase.from('likes').select('liked_profile_id').eq('liker_id', user.id),
-    getContactAllowance(user.id),
-  ])
+  const { data: profiles, count: total, error } = await profilesQuery
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false }) // tie-breaker: keeps pages stable
+    .range(from, from + PAGE_SIZE - 1)
 
   if (error) {
     throw new Error(`Failed to load Discover feed: ${error.message}`)
+  }
+
+  const totalMatches = total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalMatches / PAGE_SIZE))
+  if (requestedPage > totalPages) {
+    redirect(buildDiscoverHref(filters, totalPages))
   }
 
   const isSubscribed = allowance.subscribed
@@ -130,9 +116,10 @@ export default async function DiscoverPage({
   // profile's approved photo path, then sign all of them in ONE request.
   const photoPathByProfile = new Map<string, string>()
   for (const p of visibleProfiles) {
-    const approved = (p.profile_photos ?? []).find(
-      (photo: { status: string; image_url: string }) => photo.status === 'approved'
-    )
+    const photoList = (p.profile_photos ?? []) as Array<{ status: string; image_url: string; is_primary?: boolean }>
+    const approved =
+      photoList.find((photo) => photo.status === 'approved' && photo.is_primary) ??
+      photoList.find((photo) => photo.status === 'approved')
     if (approved) photoPathByProfile.set(p.id, approved.image_url)
   }
 

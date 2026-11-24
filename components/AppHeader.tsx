@@ -85,6 +85,7 @@ export default function AppHeader({
 }) {
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [avatarFailed, setAvatarFailed] = useState(false)
 
   return (
     <>
@@ -125,7 +126,14 @@ export default function AppHeader({
 
         <div className={styles.drawerProfile}>
           <div className={styles.drawerAvatar}>
-            {avatarUrl ? <img src={avatarUrl} alt="" /> : displayName ? getInitials(displayName) : ''}
+            {avatarUrl && !avatarFailed ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="" onError={() => setAvatarFailed(true)} />
+            ) : displayName ? (
+              getInitials(displayName)
+            ) : (
+              ''
+            )}
           </div>
           <div className={styles.drawerName}>
             {displayName ?? 'Your account'}
